@@ -1,0 +1,210 @@
+
+
+.student-hero-banner {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    border-radius: var(--radius-lg);
+    padding: 2.25rem 2rem;
+    color: #ffffff;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.student-hero-banner::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    bottom: -40px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(49, 184, 176, 0.25) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.student-hero-text h1 {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.student-hero-text p {
+    color: #ccd3f0;
+    font-size: 0.95rem;
+    margin-top: 0.35rem;
+}
+
+
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+}
+
+.course-card {
+    background: var(--surface);
+    border: 1.5px solid var(--surface-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.course-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--teal);
+}
+
+.course-card-top {
+    margin-bottom: 1.25rem;
+}
+
+.course-badge-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.course-code-tag {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--navy);
+    background: #edf0fa;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.02em;
+}
+
+.course-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+}
+
+.course-instructor {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.instructor-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--teal-light);
+    color: var(--teal-dark);
+    display: grid;
+    place-items: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.course-card-bottom {
+    border-top: 1px solid var(--surface-border);
+    padding-top: 1rem;
+    margin-top: auto;
+}
+
+.course-meta-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+
+.bulletin-card {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-left: 4px solid var(--teal);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.bulletin-card.global {
+    border-left-color: var(--navy);
+}
+
+.bulletin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.bulletin-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--navy);
+}
+
+.bulletin-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.bulletin-body {
+    font-size: 0.925rem;
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1.5rem;
+}
+
+.profile-card-sidebar {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius-lg);
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+
+.profile-avatar-large {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--navy));
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin: 0 auto 1.25rem auto;
+    box-shadow: 0 4px 15px rgba(49, 184, 176, 0.3);
+}
+
+@media (max-width: 768px) {
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+    .student-hero-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+
