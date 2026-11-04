@@ -1,5 +1,26 @@
-<?php
+<?php if (!empty($useVisualTheme)): ?>
+    </main>
+    <?php
+    $visualBase = $siteRootPath ?? '../';
+    $visualBase .= 'visual/';
+    if (isset($extraJs)):
+        ?>
+        <?php foreach ((array) $extraJs as $script): ?>
+            <script src="<?= htmlspecialchars($script) ?>"></script>
+        <?php endforeach; ?>
+    <?php
+    endif;
+    ?>
+    <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/portal-layout.js?v=202611032311') ?>"></script>
+    <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/academic-year.js?v=202611022102') ?>"></script>
+    <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/announcement-attachments.js?v=202611041633') ?>"></script>
+    <?php if ($registrarAnnouncementGate !== null): ?>
+        <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/registrar-announcement-gate.js?v=202611041802') ?>"></script>
+    <?php endif; ?>
+    <?php
+    require __DIR__ . '/../visual/_partials/foot.php';
 ?>
+<?php else: ?>
     </main>
     <footer class="app-footer">
         <div class="footer-content">
@@ -12,8 +33,14 @@
         </div>
     </footer>
     <?php if (isset($extraJs)): ?>
-        <script src="<?= htmlspecialchars($extraJs) ?>"></script>
+        <?php foreach ((array) $extraJs as $script): ?>
+            <script src="<?= htmlspecialchars($script) ?>"></script>
+        <?php endforeach; ?>
     <?php endif; ?>
-</body>
-</html>
+    <?php require_once __DIR__ . '/portal_toast.php'; renderPortalToast(); ?>
+    <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/portal-toast.js?v=202611041835') ?>"></script>
+    <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'visual/js/visual.js?v=202611041602') ?>"></script>
+    </body>
 
+    </html>
+<?php endif; ?>

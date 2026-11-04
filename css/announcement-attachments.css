@@ -1,0 +1,83 @@
+.announcement-attachment-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.5rem;
+  margin-top: 1rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(217, 133, 150, 0.28);
+  border-radius: 0.55rem;
+  background: #fff8f9;
+  color: #a84c60;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.announcement-attachment-open:hover {
+  border-color: rgba(100, 116, 139, 0.42);
+  background: #f8fafc;
+}
+
+.announcement-attachment-open:focus-visible,
+.announcement-attachment-viewer-close:focus-visible {
+  outline: 3px solid rgba(217, 133, 150, 0.42);
+  outline-offset: 3px;
+}
+
+.announcement-attachment-viewer {
+  position: fixed;
+  z-index: 11000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: rgba(16, 20, 29, 0.88);
+  animation: announcement-viewer-in 160ms ease-out both;
+}
+
+.announcement-attachment-viewer-close {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  background: rgba(20, 24, 33, 0.7);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.announcement-attachment-viewer-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.announcement-attachment-viewer img {
+  display: block;
+  max-width: 90vw;
+  max-height: 86vh;
+  max-height: 86dvh;
+  border-radius: 0.4rem;
+  object-fit: contain;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes announcement-viewer-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-attachment-viewer {
+    animation-duration: 0.01ms !important;
+  }
+}

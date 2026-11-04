@@ -5,20 +5,20 @@
     --paper: #faf7f0;
     --navy: #222a58;
     --teal: #31b8b0;
-    --coral: #f15e4e;
+    --coral: #e6a1ae;
 
     
     --navy-dark: #161b39;
     --navy-light: #343f7d;
     --teal-dark: #228b85;
     --teal-light: #e4f7f6;
-    --coral-dark: #d44333;
-    --coral-light: #feece9;
+    --coral-dark: #d98596;
+    --coral-light: #fff0f2;
 
     --surface: #ffffff;
     --surface-alt: #f4efe4;
     --surface-border: #e6dfd1;
-    --text-main: #1d2342;
+    --text-main: #64748b;
     --text-muted: #676e8a;
     --text-light: #8e95aa;
 
@@ -26,8 +26,8 @@
     --status-success-bg: #e5f7f0;
     --status-pending: #df8a14;
     --status-pending-bg: #fdf3e2;
-    --status-danger: #e23e2d;
-    --status-danger-bg: #fdeae8;
+    --status-danger: #d98596;
+    --status-danger-bg: #fff0ef;
 
     --radius-sm: 6px;
     --radius-md: 10px;
@@ -56,6 +56,34 @@ html, body {
     color: var(--text-main);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+}
+
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #d98596 rgba(255, 240, 242, 0.9);
+}
+
+::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 240, 242, 0.9);
+}
+
+::-webkit-scrollbar-thumb {
+    border: 3px solid rgba(255, 240, 242, 0.9);
+    border-radius: 999px;
+    background: linear-gradient(180deg, #df8d9d, #d98596);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #e6a1ae, #df8d9d);
+}
+
+::-webkit-scrollbar-corner {
+    background: rgba(255, 240, 242, 0.9);
 }
 
 a {
@@ -193,6 +221,45 @@ a:hover {
     gap: 1.25rem;
 }
 
+.app-navbar-clock,
+.site-live-clock {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.student-dashboard-heading,
+.student-page-header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.admin-portal .admin-portal-heading h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
 .user-badge {
     display: flex;
     align-items: center;
@@ -218,41 +285,72 @@ a:hover {
 
 .user-meta {
     display: flex;
+    min-width: 170px;
+    align-items: center;
     flex-direction: column;
 }
 
 .user-name {
+    max-width: 220px;
+    overflow: hidden;
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--navy);
     line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .role-pill {
     display: inline-block;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.context-pill {
+    display: inline-block;
     padding: 0.1rem 0.5rem;
     border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
-.role-pill.role-admin {
-    background: #e8ebfc;
-    color: var(--navy);
+.context-pill.context-pill-admin {
+    background: #fff0f2;
+    color: #b94f63;
 }
 
-.role-pill.role-professor {
-    background: var(--teal-light);
-    color: var(--teal-dark);
-}
-
-.role-pill.role-student {
+.context-pill.context-pill-registrar {
     background: var(--coral-light);
     color: var(--coral-dark);
 }
 
+.context-pill.context-pill-professor {
+    background: var(--teal-light);
+    color: var(--teal-dark);
+}
+
+.context-pill.context-pill-student {
+    background: var(--coral-light);
+    color: var(--coral-dark);
+}
+
+.context-pill.context-pill-dean {
+    background: #fff0f2;
+    color: #b94f63;
+}
+
+.student-dashboard .user-meta .role-pill {
+    align-self: center;
+    white-space: nowrap;
+}
 
 
 .btn {
@@ -271,14 +369,14 @@ a:hover {
 }
 
 .btn-primary {
-    background-color: var(--navy);
+    background-color: #df8d9d;
     color: #ffffff;
 }
 
 .btn-primary:hover {
-    background-color: var(--navy-light);
+    background-color: #e6a1ae;
     color: #ffffff;
-    box-shadow: 0 4px 12px rgba(34, 42, 88, 0.2);
+    box-shadow: 0 4px 12px rgba(223, 141, 157, 0.2);
 }
 
 .btn-teal {
@@ -319,7 +417,7 @@ a:hover {
 }
 
 .btn-danger:hover {
-    background-color: #bd2717;
+    background-color: #df8d9d;
     color: #ffffff;
 }
 
@@ -670,5 +768,14 @@ body {
         justify-content: center;
         text-align: center;
     }
-}
 
+    .app-navbar-clock [data-clock-date],
+    .site-live-clock [data-clock-date] {
+        display: none;
+    }
+
+    .app-navbar-clock,
+    .site-live-clock {
+        font-size: 0.7rem;
+    }
+}
