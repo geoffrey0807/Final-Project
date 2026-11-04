@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once '../config/db.php';
+require_once '../includes/email_policy.php';
+require_once '../includes/portal_toast.php';
 
 if (isset($_SESSION['user_id'])) {
     header("Location: ../index.php");
@@ -8,21 +10,11 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $error = '';
-$success = '';
 
-if (isset($_GET['registered'])) {
-    $success = "Registration successful! You may now sign in with your credentials.";
-}
-if (isset($_GET['reset'])) {
-    $success = "Password has been successfully updated. Please sign in.";
-}
-if (isset($_GET['logged_out'])) {
-    $success = "You have been safely signed out.";
-}
 if (isset($_GET['error']) && $_GET['error'] === 'unauthorized') {
     $error = "Please sign in to access that workspace.";
+    setPortalToast($error, 'error');
 }
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -30,26 +22,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($email) || empty($password)) {
         $error = "Please provide both your official email and password.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Please provide a valid institutional email address.";
+    } elseif (!isValidApexEmail($email)) {
+        $error = apexEmailPolicyMessage();
     } else {
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email LIMIT 1");
         $stmt->execute(['email' => $email]);
         $user = $stmt->fetch();
 
-        if ($user && password_verify($password, $user['password'])) {
+        $validPassword = $user && password_verify($password, $user['password']);
+        $legacyRegistrarPassword = $user
+            && $user['role'] === 'registrar'
+            && !$validPassword
+            && hash_equals($user['password'], $password);
+
+        $accountEnabled = $user && (int) $user['is_active'] === 1 && $user['archived_at'] === null;
+        if (($validPassword || $legacyRegistrarPassword) && !$accountEnabled) {
+            $error = "This account is disabled or archived. Contact an administrator for assistance.";
+        } elseif ($validPassword || $legacyRegistrarPassword) {
+            if ($legacyRegistrarPassword) {
+                $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+                $upgradePassword = $pdo->prepare(
+                    'UPDATE users SET password = :password WHERE id = :id AND password = :legacy_password'
+                );
+                $upgradePassword->execute([
+                    'password' => $passwordHash,
+                    'id' => $user['id'],
+                    'legacy_password' => $user['password'],
+                ]);
+            }
+
             session_regenerate_id(true);
 
             $_SESSION['user_id'] = (int) $user['id'];
             $_SESSION['user_name'] = trim($user['first_name'] . ' ' . $user['last_name']);
             $_SESSION['role'] = $user['role'];
             $_SESSION['email'] = $user['email'];
+            $_SESSION['profile_photo'] = (string) ($user['profile_photo'] ?? '');
+            setPortalToast('Login successful.');
 
             header("Location: ../index.php");
             exit;
         } else {
             $error = "Invalid credentials. Please verify your email and password.";
         }
+    }
+    if ($error !== '') {
+        setPortalToast($error, 'error');
     }
 }
 ?>
@@ -60,62 +78,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In • APEX Learning Hub</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../visual/css/visual.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css?v=202611041145">
+    <link rel="stylesheet" href="../visual/css/visual.css?v=202611041145">
     <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/auth-portal.css">
+    <link rel="stylesheet" href="../css/portal-toast.css">
     <style>
-        .auth-page {
-            display: block;
-            padding: 0;
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 236, 240, 0.22) 100%),
-                url('../bgimage/APEX Learning Hub.png') center / cover fixed no-repeat;
-        }
-
-        .auth-main {
-            min-height: calc(100vh - 68px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            padding-bottom: 75px;
-        }
-
-        .main-header {
-            background: rgba(255, 255, 255, 0.94);
-        }
-
-        .auth-container {
-            width: min(780px, calc(100vw - 32px));
-            max-width: 780px;
-            min-height: 520px;
-            position: relative;
-            isolation: isolate;
-            background:
-                linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 226, 233, 0.58)),
-                url('../bgimage/APEX Learning Hub.png') 52% 48% / cover no-repeat;
-            border: 1px solid rgba(255, 255, 255, 0.92);
-            box-shadow:
-                0 24px 70px rgba(126, 54, 74, 0.16),
-                inset 0 1px 0 rgba(255, 255, 255, 0.95);
-        }
-
-        .auth-hero {
-            display: none;
-        }
-
-        .auth-container {
-            grid-template-columns: 1fr;
-        }
-
-        .auth-form-panel {
-            position: relative;
-            z-index: 1;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(2px);
-        }
-
         .form-group {
             position: relative;
             display: block;
@@ -125,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-group label {
             display: block;
             margin: 0 0 0.45rem;
-            color: #7e122b;
+            color: #d98596;
             font-size: 0.875rem;
             font-weight: 600;
             line-height: 1.2;
@@ -135,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             height: 48px;
             border-color: rgba(148, 163, 184, 0.55);
             background: rgba(255, 255, 255, 0.82);
-            box-shadow: 0 5px 18px rgba(126, 18, 43, 0.035);
+            box-shadow: 0 5px 18px rgba(217, 133, 150, 0.035);
         }
 
         .form-control::placeholder {
@@ -152,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .form-control:focus {
-            border-color: rgba(225, 29, 72, 0.58);
-            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.10);
+            border-color: rgba(230, 161, 174, 0.58);
+            box-shadow: 0 0 0 3px rgba(230, 161, 174, 0.10);
         }
 
         .input-wrapper {
@@ -188,75 +160,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .password-toggle .eye-open {
             display: none;
         }
+
     </style>
 </head>
 
-<body class="auth-page">
-    <!-- ===== Primary Navigation Header ===== -->
-    <header class="main-header">
-        <div class="header-container">
-            <a href="../visual/homepage.php" class="header-logo" aria-label="APEX Learning Hub Home">
-                <svg class="header-logo-mark" viewBox="0 0 504 428" role="img" aria-hidden="true">
-                    <title>APEX Brand Mark</title>
-                    <path fill="var(--navy)" d="M252 0 154 103a19 19 0 0 0-5 13v97L0 361v67h82l120-119v-62l50-49z" />
-                    <path fill="var(--teal)" d="m262 13 87 92a15 15 0 0 1 5 12v97l150 147v67h-75L301 301v-53l-39-40z" />
-                    <path fill="var(--coral)" d="M213 312h83l118 116h-99l-55-56h-57l-54 56H97z" />
-                </svg>
-                <div class="header-logo-type">
-                    <span class="header-wordmark">APEX</span>
-                    <span class="header-tagline">Learning Hub</span>
-                </div>
-            </a>
-
-            <nav class="main-nav" id="mainNav" aria-label="Main Site Navigation">
-                <a href="../visual/homepage.php" class="nav-link"><span data-lang-en>Home</span><span
-                        data-lang-fil>[FILIPINO: Tahanan]</span></a>
-                <a href="../visual/announcement.php" class="nav-link"><span data-lang-en>Announcements</span><span
-                        data-lang-fil>[FILIPINO: Mga Anunsyo]</span></a>
-                <a href="../visual/policies.php" class="nav-link"><span data-lang-en>Policies</span><span
-                        data-lang-fil>[FILIPINO: Mga Patakaran]</span></a>
-                <a href="../visual/contact.php" class="nav-link"><span data-lang-en>Contact Us</span><span
-                        data-lang-fil>[FILIPINO: Makipag-ugnayan]</span></a>
-                <a href="../visual/homepage.php#about" class="nav-link"><span data-lang-en>About</span><span
-                        data-lang-fil>[FILIPINO: Tungkol sa Amin]</span></a>
-            </nav>
-
-            <div class="header-actions">
-                <button class="burger-btn" id="menuToggle" aria-label="Toggle Navigation Menu" aria-expanded="false">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-            </div>
-        </div>
-    </header>
+<body class="auth-page" data-visual-base="../visual/">
+    <?php
+    $visualBase = '../visual/';
+    include __DIR__ . '/../visual/_partials/navigation.php';
+    ?>
 
     <main class="auth-main">
         <div class="auth-container">
 
             <section class="auth-form-panel">
                 <div class="auth-form-header">
-                    <h1>Welcome</h1>
-                    <p>Sign in to continue</p>
+                    <h1>Welcome!</h1>
+                    <p>Sign in to continue.</p>
                 </div>
-
-                <?php if (!empty($error)): ?>
-                    <div class="alert alert-danger">
-                        <span><?php echo htmlspecialchars($error); ?></span>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (!empty($success)): ?>
-                    <div class="alert alert-success">
-                        <span><?php echo htmlspecialchars($success); ?></span>
-                    </div>
-                <?php endif; ?>
 
                 <form action="login.php" method="POST" id="loginForm" autocomplete="off">
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" class="form-control" placeholder="email@apex.edu.ph"
-                            value="" required autocomplete="off">
+                        <label for="email">APEX Email</label>
+                        <input type="email" id="email" name="email" class="form-control"
+                            placeholder="e.g. name@apex.edu.ph" pattern="[A-Za-z0-9._%+\-]+@apex\.edu\.ph"
+                            title="Use an APEX Email ending in @apex.edu.ph." value="" required autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -286,19 +214,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <div class="form-options">
-                        <a href="forgot-password.php" class="text-muted" style="font-size:0.85rem;">Forgot Password?</a>
-                    </div>
-
                     <button type="submit" class="btn btn-primary" style="width:100%; padding:0.75rem;">
-                        Sign In
+                        Login
                     </button>
                 </form>
             </section>
         </div>
     </main>
 
-    <script src="../visual/js/visual.js"></script>
+    <?php renderPortalToast(); ?>
+    <script src="../js/portal-toast.js?v=202611041835"></script>
+
     <script>
         document.getElementById('togglePassword').addEventListener('click', function () {
             const passwordInput = document.getElementById('password');
@@ -337,15 +263,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 window.setTimeout(clearLoginFields, 50);
             });
 
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function (alert) {
-                setTimeout(function () {
-                    alert.style.opacity = '0';
-                    setTimeout(function () { alert.remove(); }, 400);
-                }, 4500);
-            });
         });
     </script>
-</body>
-
-</html>
+    <?php include __DIR__ . '/../visual/_partials/foot.php'; ?>

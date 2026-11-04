@@ -1,0 +1,463 @@
+/**
+ * APEX Learning Hub - Portal Profile Styles
+ */
+
+[hidden] {
+  display: none !important;
+}
+
+.portal-profile-shell {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0.65rem 2.5rem 0.65rem;
+  box-sizing: border-box;
+}
+
+/* Page Header */
+.portal-profile-header {
+  margin-bottom: 1.5rem;
+}
+
+.portal-profile-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--navy, #222a58);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* Two-Column Grid - Perfectly Proportionate & Symmetrical */
+.portal-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  width: 100%;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+@media (max-width: 960px) {
+  .portal-profile-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+/* Profile Cards */
+.portal-profile-card {
+  background: #ffffff;
+  border: 1px solid var(--surface-border, #e6dfd1);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(34, 42, 88, 0.05);
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-card-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1ece4;
+}
+
+.portal-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--navy, #222a58);
+  margin: 0 0 0.35rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.portal-card-title svg {
+  width: 22px;
+  height: 22px;
+  color: var(--teal, #31b8b0);
+}
+
+.portal-card-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted, #676e8a);
+  margin: 0;
+}
+
+/* Forms - Stretch vertically to match baselines */
+.portal-profile-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Photo Upload Box inside Personal Info */
+.portal-profile-photo-box {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background: var(--paper, #faf7f0);
+  border: 1.5px dashed var(--surface-border, #e6dfd1);
+  border-radius: 14px;
+  margin-bottom: 1.25rem;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+  box-sizing: border-box;
+}
+
+.portal-profile-photo-box:hover {
+  border-color: var(--teal, #31b8b0);
+  background-color: #fdfbf7;
+}
+
+.portal-profile-avatar-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+  overflow: hidden;
+  background: #e2e8f0;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.portal-profile-avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.portal-default-avatar-svg {
+  width: 100%;
+  height: 100%;
+  padding: 22%;
+  box-sizing: border-box;
+  background: #e2e8f0;
+  color: #64748b;
+  border-radius: 50%;
+  display: block;
+}
+
+.portal-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(34, 42, 88, 0.65);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 50%;
+}
+
+.portal-avatar-overlay svg {
+  width: 24px;
+  height: 24px;
+}
+
+.portal-profile-avatar-wrap:hover .portal-avatar-overlay {
+  opacity: 1;
+}
+
+.portal-profile-photo-controls {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.portal-photo-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.portal-profile-photo-btn {
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.5rem 1.05rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.portal-profile-photo-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.portal-photo-revert-btn {
+  font-size: 0.82rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  color: #b91c1c;
+  border-color: #fca5a5;
+  background: transparent;
+}
+
+.portal-photo-revert-btn:hover {
+  background-color: #fee2e2;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.portal-profile-remove-photo-btn {
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.portal-profile-remove-photo-btn:hover {
+  background-color: #fee2e2;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.portal-profile-file-input {
+  display: none !important;
+}
+
+.portal-profile-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted, #676e8a);
+  margin: 0;
+}
+
+.portal-photo-selected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: #047857;
+  font-weight: 600;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  width: fit-content;
+}
+
+/* Fields Container - Uniform gaps between all inputs */
+.portal-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-group {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--navy, #222a58);
+  margin-bottom: 0.45rem;
+}
+
+.form-group label .required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.72rem 1rem;
+  font-size: 0.94rem;
+  font-family: inherit;
+  border: 1.5px solid var(--surface-border, #e6dfd1);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--navy, #222a58);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--teal, #31b8b0);
+  box-shadow: 0 0 0 3px rgba(49, 184, 176, 0.15);
+}
+
+/* Password Input With Toggle */
+.portal-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.portal-password-wrap .form-control {
+  padding-right: 2.75rem;
+}
+
+.portal-password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  padding: 0.35rem 0.5rem;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.portal-password-toggle:hover {
+  color: var(--navy, #222a58);
+}
+
+.portal-password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Password Validation Requirements Card */
+.portal-password-requirements {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+}
+
+.portal-req-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.portal-req-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.portal-req-item {
+  font-size: 0.82rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  transition: color 0.2s;
+}
+
+.portal-req-icon {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.portal-req-icon svg {
+  display: none;
+  width: 10px;
+  height: 10px;
+  color: #ffffff;
+}
+
+.portal-req-item.valid {
+  color: #15803d;
+  font-weight: 500;
+}
+
+.portal-req-item.valid .portal-req-icon {
+  background-color: #16a34a;
+  border-color: #16a34a;
+}
+
+.portal-req-item.valid .portal-req-icon svg {
+  display: block;
+}
+
+/* Password Match Indicator */
+.portal-match-indicator {
+  font-size: 0.82rem;
+  margin-top: 0.45rem;
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.portal-match-indicator.match {
+  display: flex;
+  color: #15803d;
+}
+
+.portal-match-indicator.mismatch {
+  display: flex;
+  color: #dc2626;
+}
+
+/* Card Actions - Bottom baseline alignment */
+.portal-card-actions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #f1ece4;
+}
+
+.portal-card-actions .btn {
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .portal-profile-card {
+    padding: 1.5rem;
+  }
+
+  .portal-profile-photo-box {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .portal-photo-btn-group {
+    justify-content: center;
+  }
+
+  .portal-card-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .portal-card-actions .btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}

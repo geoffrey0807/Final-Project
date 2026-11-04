@@ -2,6 +2,8 @@
 session_start();
 require_once '../config/db.php';
 require_once '../includes/session_check.php';
+require_once '../includes/academic_access.php';
+require_once '../includes/portal_toast.php';
 
 checkAccess(['student'], '../auth/login.php');
 
@@ -9,16 +11,20 @@ $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 $studentId = (int)$_SESSION['user_id'];
 
-function respond($success, $message, $redirect = '../views/student_dashboard.php') {
+function respond($success, $message, $redirect = '../views/student/student_dashboard.php') {
     global $isAjax;
     if ($isAjax) {
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['success' => $success, 'message' => $message]);
         exit;
     }
-    $query = $success ? "msg=" . urlencode($message) : "error=" . urlencode($message);
-    header("Location: $redirect?$query");
+    setPortalToast($message, $success ? 'success' : 'error');
+    header("Location: $redirect");
     exit;
+}
+
+if ($academicReadOnly && in_array($action, ['apply_course', 'drop_course', 'complete_assignment'], true)) {
+    respond(false, 'This past academic period is view-only.');
 }
 
 try {
@@ -40,6 +46,9 @@ try {
 
             if (!$course) {
                 respond(false, "Course not found.");
+            }
+            if (!studentCanAccessCourse($pdo, $studentId, $courseId)) {
+                denyStudentCourseAccess($isAjax);
             }
 
             $checkEnroll = $pdo->prepare("SELECT id, status FROM enrollments WHERE student_id = :sid AND course_id = :cid");
@@ -75,6 +84,70 @@ try {
             respond(true, "Course application or enrollment has been dropped.");
             break;
 
+        case 'complete_assignment':
+            $assignmentId = (int)($_POST['assignment_id'] ?? 0);
+            if ($assignmentId <= 0) {
+                respond(false, "Invalid assignment selected.", '../views/student/student_tasks.php');
+            }
+
+            $assignmentCourseStmt = $pdo->prepare('SELECT course_id FROM assignments WHERE id = :assignment_id');
+            $assignmentCourseStmt->execute(['assignment_id' => $assignmentId]);
+            $assignmentCourseId = $assignmentCourseStmt->fetchColumn();
+            if ($assignmentCourseId && !studentCanAccessCourse($pdo, $studentId, (int) $assignmentCourseId)) {
+                denyStudentCourseAccess($isAjax);
+            }
+
+            $assignmentStmt = $pdo->prepare("
+                SELECT a.id, a.course_id, COUNT(q.id) AS total_questions
+                FROM assignments a
+                JOIN enrollments e ON e.course_id = a.course_id
+                JOIN courses c ON c.id = a.course_id
+                LEFT JOIN assignment_questions q ON q.assignment_id = a.id
+                WHERE a.id = :assignment_id
+                  AND e.student_id = :student_id
+                  AND e.status = 'APPROVED'
+                  AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
+                GROUP BY a.id
+            ");
+            $assignmentStmt->execute([
+                'assignment_id' => $assignmentId,
+                'student_id' => $studentId,
+            ]);
+            $assignment = $assignmentStmt->fetch();
+            if (!$assignment) {
+                respond(false, "That assignment is not available in your enrolled courses.", '../views/student/student_tasks.php');
+            }
+
+            $totalQuestions = (int) $assignment['total_questions'];
+            $score = 0;
+            if ($totalQuestions > 0) {
+                $questionStmt = $pdo->prepare("SELECT id, correct_answer FROM assignment_questions WHERE assignment_id = :assignment_id ORDER BY question_order, id");
+                $questionStmt->execute(['assignment_id' => $assignmentId]);
+                $answers = $_POST['answers'] ?? [];
+                foreach ($questionStmt->fetchAll() as $question) {
+                    $submittedAnswer = is_array($answers) ? strtolower(trim((string) ($answers[$question['id']] ?? ''))) : '';
+                    $correctAnswer = strtolower(trim((string) $question['correct_answer']));
+                    if ($submittedAnswer !== '' && $submittedAnswer === $correctAnswer) {
+                        $score++;
+                    }
+                }
+            }
+            $completionStmt = $pdo->prepare("
+                INSERT INTO assignment_completions (assignment_id, student_id, score, total_questions)
+                VALUES (:assignment_id, :student_id, :score, :total_questions)
+                ON DUPLICATE KEY UPDATE score = VALUES(score), total_questions = VALUES(total_questions), completed_at = CURRENT_TIMESTAMP
+            ");
+            $completionStmt->execute([
+                'assignment_id' => $assignmentId,
+                'student_id' => $studentId,
+                'score' => $score,
+                'total_questions' => $totalQuestions,
+            ]);
+            respond(true, $totalQuestions > 0
+                ? "Assessment submitted. Score: {$score}/{$totalQuestions}."
+                : "Assignment marked complete.", '../views/student/student_tasks.php');
+            break;
+
         case 'update_profile':
             $fn = trim($_POST['first_name'] ?? '');
             $ln = trim($_POST['last_name'] ?? '');
@@ -97,4 +170,3 @@ try {
 } catch (Exception $e) {
     respond(false, "Error: " . $e->getMessage());
 }
-

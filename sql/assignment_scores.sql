@@ -1,0 +1,3 @@
+ALTER TABLE assignment_completions
+    ADD COLUMN IF NOT EXISTS score INT NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS total_questions INT NOT NULL DEFAULT 0;
