@@ -45,32 +45,7 @@ const SEARCH_INDEX = [
   {
     title: "All Campus Announcements & Advisories",
     page: "Announcements",
-    url: "announcement.php",
-  },
-  {
-    title: "Midterm Examination Schedule Released",
-    page: "Announcements",
-    url: "announcement.php",
-  },
-  {
-    title: "Scheduled Maintenance Advisory",
-    page: "Announcements",
-    url: "announcement.php",
-  },
-  {
-    title: "Second Semester Enrollment Deadline",
-    page: "Announcements",
-    url: "announcement.php",
-  },
-  {
-    title: "Student Leadership Summit 2026",
-    page: "Announcements",
-    url: "announcement.php",
-  },
-  {
-    title: "Updated Academic Integrity Guidelines",
-    page: "Announcements",
-    url: "announcement.php",
+    url: "homepage.php#announcements",
   },
 
   {
@@ -432,62 +407,6 @@ function initHomeCardCarousels() {
     const track = carousel.querySelector(".home-card-carousel-track");
     const originalCards = track ? Array.from(track.children) : [];
     if (!viewport || !track || originalCards.length < 2) return;
-
-    if (carousel.getAttribute("aria-label") === "Latest announcements carousel") {
-      const previousButton = carousel.querySelector(
-        '.media-carousel-arrow[data-direction="previous"]',
-      );
-      const nextButton = carousel.querySelector(
-        '.media-carousel-arrow[data-direction="next"]',
-      );
-      let activeIndex = 0;
-      let updateFrame = 0;
-
-      const updateControls = () => {
-        const viewportCenter =
-          viewport.getBoundingClientRect().left + viewport.clientWidth / 2;
-        let closestDistance = Infinity;
-        originalCards.forEach((card, index) => {
-          const bounds = card.getBoundingClientRect();
-          const distance = Math.abs(bounds.left + bounds.width / 2 - viewportCenter);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            activeIndex = index;
-          }
-        });
-        updateCenteredCard(viewport, originalCards);
-        if (previousButton) previousButton.disabled = activeIndex === 0;
-        if (nextButton) nextButton.disabled = activeIndex === originalCards.length - 1;
-      };
-
-      const scrollToCard = (index) => {
-        const behavior = window.matchMedia("(prefers-reduced-motion: reduce)")
-          .matches
-          ? "auto"
-          : "smooth";
-        viewport.scrollTo({
-          left: getCarouselCardOffset(viewport, originalCards[index]),
-          behavior,
-        });
-      };
-
-      previousButton?.addEventListener("click", () => {
-        if (activeIndex > 0) scrollToCard(activeIndex - 1);
-      });
-      nextButton?.addEventListener("click", () => {
-        if (activeIndex < originalCards.length - 1) scrollToCard(activeIndex + 1);
-      });
-      viewport.addEventListener("scroll", () => {
-        if (updateFrame) return;
-        updateFrame = window.requestAnimationFrame(() => {
-          updateFrame = 0;
-          updateControls();
-        });
-      }, { passive: true });
-      window.addEventListener("resize", updateControls);
-      updateControls();
-      return;
-    }
 
     const cloneGroups = 3;
     const createLoopClone = (card) => {

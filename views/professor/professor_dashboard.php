@@ -5,7 +5,7 @@ require_once '../../config/db.php';
 require_once '../../includes/dashboard_greeting.php';
 require_once '../../includes/announcement_access.php';
 
-$extraCss = ['../../css/admin.css?v=202611011335', '../../css/student.css?v=202611020900'];
+$extraCss = ['../../css/admin.css?v=202611061140', '../../css/student.css?v=202611020900'];
 $extraJs = ['../../js/admin.js?v=202611010115', '../../js/student.js?v=202610301825'];
 $bodyClass = 'admin-dashboard student-dashboard professor-portal';
 $useVisualTheme = true;
@@ -30,20 +30,20 @@ $courseStmt = $pdo->prepare("
     SELECT c.*, 
            (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id AND e.status = 'APPROVED') AS approved_students
     FROM courses c
-    WHERE c.professor_id = :pid" . academicPeriodDateFilter('c.created_at') . "
+    WHERE c.professor_id = :pid AND c.archived_at IS NULL" . academicPeriodRecordFilter('c', 'c.created_at') . "
     ORDER BY c.course_code ASC
 ");
-$courseStmt->execute(array_merge(['pid' => $profId], academicPeriodDateParams()));
+$courseStmt->execute(array_merge(['pid' => $profId], academicPeriodRecordParams()));
 $myCourses = $courseStmt->fetchAll();
 
 $annStmt = $pdo->prepare("
     SELECT a.*, a.headline AS title, c.course_code, c.course_name
     FROM announcements a
     JOIN courses c ON a.course_id = c.id
-    WHERE a.author_id = :pid" . academicPeriodDateFilter('a.created_at') . "
+    WHERE a.author_id = :pid" . academicPeriodRecordFilter('a', 'a.created_at') . "
     ORDER BY a.created_at DESC
 ");
-$annStmt->execute(array_merge(['pid' => $profId], academicPeriodDateParams()));
+$annStmt->execute(array_merge(['pid' => $profId], academicPeriodRecordParams()));
 $myAnnouncements = $annStmt->fetchAll();
 
 $assignedCourseIds = array_values(array_filter(array_map(
@@ -63,11 +63,11 @@ $latestAnnouncementStmt = $pdo->prepare("
     WHERE u.role IN ('registrar', 'dean')
       AND (a.course_id IS NULL$assignedCourseClause)
       AND {$announcementAudienceFilter}
-      " . academicPeriodDateFilter('a.created_at') . "
+    " . academicPeriodRecordFilter('a', 'a.created_at') . "
     ORDER BY a.created_at DESC
         LIMIT 6
 ");
-$latestAnnouncementStmt->execute(academicPeriodDateParams());
+$latestAnnouncementStmt->execute(academicPeriodRecordParams());
 $latestAnnouncements = $latestAnnouncementStmt->fetchAll();
 $dashboardAnnouncements = $latestAnnouncements;
 $dashboardAnnouncementsHref = '../announcements.php';
@@ -76,20 +76,20 @@ $assignmentsStmt = $pdo->prepare("
     SELECT a.*, c.course_code, c.course_name
     FROM assignments a
     JOIN courses c ON c.id = a.course_id
-    WHERE a.professor_id = :professor_id" . academicPeriodDateFilter('a.due_at') . "
+    WHERE a.professor_id = :professor_id" . academicPeriodRecordFilter('a', 'a.created_at') . "
     ORDER BY a.due_at ASC
 ");
-$assignmentsStmt->execute(array_merge(['professor_id' => $profId], academicPeriodDateParams()));
+$assignmentsStmt->execute(array_merge(['professor_id' => $profId], academicPeriodRecordParams()));
 $myAssignments = $assignmentsStmt->fetchAll();
 
 $lessonsStmt = $pdo->prepare("
     SELECT l.*, c.course_code, c.course_name
     FROM lessons l
     JOIN courses c ON c.id = l.course_id
-    WHERE l.professor_id = :professor_id" . academicPeriodDateFilter('l.created_at') . "
+    WHERE l.professor_id = :professor_id" . academicPeriodRecordFilter('l', 'l.created_at') . "
     ORDER BY l.created_at DESC
 ");
-$lessonsStmt->execute(array_merge(['professor_id' => $profId], academicPeriodDateParams()));
+$lessonsStmt->execute(array_merge(['professor_id' => $profId], academicPeriodRecordParams()));
 $myLessons = $lessonsStmt->fetchAll();
 
 $totalAssignedCourses = count($myCourses);
@@ -108,9 +108,9 @@ if (!empty($assignedCourseIdsForStudents)) {
         FROM enrollments e
         WHERE e.status = 'APPROVED'
           AND e.course_id IN (" . implode(',', $assignedCourseIdsForStudents) . ")
-          " . academicPeriodDateFilter('COALESCE(e.decided_at, e.applied_at)') . "
+          " . academicPeriodRecordFilter('e', 'e.applied_at') . "
     ");
-    $studentCountStmt->execute(academicPeriodDateParams());
+    $studentCountStmt->execute(academicPeriodRecordParams());
     $totalAssignedStudents = (int) $studentCountStmt->fetchColumn();
 }
 $manilaNow = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'));
@@ -186,18 +186,6 @@ require_once '../../includes/header.php';
 
             </div>
             <aside class="professor-dashboard-side-column">
-                <?php if ($professorView === 'dashboard' && !empty($myCourses)): ?>
-                    <a class="course-roster-card professor-course-link professor-dashboard-course-card"
-                        href="professor_classes.php">
-                        <h3>View your assigned classes</h3>
-                        <div class="text-muted">Open a class to manage its lessons, assessments, and announcements.</div>
-                        <div class="professor-course-card-footer">
-                            <span><?= $totalAssignedCourses ?>     <?= $totalAssignedCourses === 1 ? 'class' : 'classes' ?>
-                                assigned</span>
-                            <span>View classes &rarr;</span>
-                        </div>
-                    </a>
-                <?php endif; ?>
                 <section class="professor-actions-panel">
                     <div class="student-overview-card admin-dashboard-action-card professor-quick-action">
                         <button type="button" class="btn btn-coral professor-action-btn professor-quick-action-button"
@@ -235,13 +223,17 @@ require_once '../../includes/header.php';
                     </div>
                     <div class="student-announcement-list">
                         <?php foreach ($latestAnnouncements as $announcement): ?>
-                            <div class="student-announcement-preview">
+                            <div class="student-announcement-preview student-announcement-bulletin">
                                 <span>
-                                    <strong><?= htmlspecialchars($announcement['title']) ?></strong>
                                     <small>
                                         <?= htmlspecialchars(announcementAuthorLabel($announcement['role']), ENT_QUOTES, 'UTF-8') ?>
-                                        &middot; <?= htmlspecialchars($announcement['first_name'] . ' ' . $announcement['last_name'], ENT_QUOTES, 'UTF-8') ?>
+                                        <?php if ($announcement['role'] !== 'registrar'): ?>
+                                            &middot;
+                                            <?= htmlspecialchars($announcement['first_name'] . ' ' . $announcement['last_name'], ENT_QUOTES, 'UTF-8') ?>
+                                        <?php endif; ?>
                                     </small>
+                                    <strong><?= htmlspecialchars($announcement['title'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <p><?= nl2br(htmlspecialchars($announcement['message'], ENT_QUOTES, 'UTF-8')) ?></p>
                                 </span>
                             </div>
                         <?php endforeach; ?>
@@ -267,53 +259,71 @@ require_once '../../includes/header.php';
         </div>
 
         <div class="tab-panel active" id="tabCourses">
-            <div class="roster-grid">
-                <?php if (empty($myCourses)): ?>
-                    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
-                        No courses have been assigned to your faculty profile yet. Contact the Administrator.
-                    </div>
-                <?php else: ?>
-                    <?php foreach ($myCourses as $c): ?>
-                        <?php
-                        $pct = $c['max_capacity'] > 0 ? min(100, round(($c['approved_students'] / $c['max_capacity']) * 100)) : 0;
-                        ?>
-                        <a class="course-roster-card professor-course-link"
-                            href="professor_course.php?id=<?= (int) $c['id'] ?>">
-                            <div>
-                                <div
-                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-                                    <span class="context-pill context-pill-admin"
-                                        style="font-size:0.8rem;"><?= htmlspecialchars($c['course_code']) ?></span>
+            <section class="professor-assigned-classes">
+                <div class="roster-grid">
+                    <?php if (empty($myCourses)): ?>
+                        <div class="card professor-assigned-empty">
+                            No courses have been assigned to your faculty profile yet. Contact the Administrator.
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($myCourses as $c): ?>
+                            <?php
+                            $courseDayLabels = [
+                                'Monday' => 'M',
+                                'Tuesday' => 'T',
+                                'Wednesday' => 'W',
+                                'Thursday' => 'Th',
+                                'Friday' => 'F',
+                                'Saturday' => 'Sa',
+                            ];
+                            $courseDays = array_values(array_filter(array_map(
+                                'trim',
+                                explode(',', (string) ($c['meeting_days'] ?? ''))
+                            )));
+                            $courseTime = $c['start_time'] && $c['end_time']
+                                ? strtoupper(date('g:ia', strtotime($c['start_time'])))
+                                . '-' . strtoupper(date('g:ia', strtotime($c['end_time'])))
+                                : null;
+                            ?>
+                            <article class="course-roster-card professor-assigned-course-card">
+                                <div class="professor-assigned-course-header">
+                                    <span><?= htmlspecialchars($c['course_code'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <h2><?= htmlspecialchars($c['course_name'], ENT_QUOTES, 'UTF-8') ?></h2>
                                 </div>
-                                <h3 style="font-size:1.15rem; color:var(--navy); margin-bottom:0.5rem;">
-                                    <?= htmlspecialchars($c['course_name']) ?>
-                                </h3>
-                                <div class="text-muted" style="font-size:0.8rem;">Section
-                                    <?= htmlspecialchars($c['section_name'] ?? 'General') ?></div>
-                                <div class="professor-class-schedule">
-                                    <?= htmlspecialchars($c['meeting_days'] ?: 'Schedule not set') ?>
-                                    <?php if ($c['start_time'] && $c['end_time']): ?>
-                                        &middot; <?= htmlspecialchars(date('g:i A', strtotime($c['start_time']))) ?>
-                                        &ndash; <?= htmlspecialchars(date('g:i A', strtotime($c['end_time']))) ?>
+                                <div class="professor-assigned-schedules">
+                                    <h3>Schedules</h3>
+                                    <?php if ($courseDays && $courseTime): ?>
+                                        <ul>
+                                            <?php foreach ($courseDays as $courseDay): ?>
+                                                <li>
+                                                    <?= htmlspecialchars(
+                                                        ($courseDayLabels[$courseDay] ?? $courseDay)
+                                                        . '|' . $courseTime
+                                                        . '|' . ($c['room'] ?: 'Room not set'),
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ) ?>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    <?php else: ?>
+                                        <p class="text-muted">Schedule not set</p>
                                     <?php endif; ?>
-                                    <?php if ($c['room']): ?>
-                                        &middot; <?= htmlspecialchars($c['room']) ?>
-                                    <?php endif; ?>
                                 </div>
-                                <div class="capacity-meter">
-                                    <div class="capacity-fill <?= $pct >= 85 ? 'high' : '' ?>" style="width: <?= $pct ?>%;">
-                                    </div>
+                                <div class="professor-assigned-course-footer">
+                                    <a class="professor-assigned-course-open"
+                                        href="professor_course.php?id=<?= (int) $c['id'] ?>">Open Class</a>
                                 </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);">
-                                    <span><?= (int) $c['approved_students'] ?> Enrolled</span>
-                                    <span>Max <?= (int) $c['max_capacity'] ?></span>
-                                </div>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
+                            </article>
+                        <?php endforeach; ?>
+
+                        <?php $emptySlots = max(0, 3 - count($myCourses)); ?>
+                        <?php for ($i = 0; $i < $emptySlots; $i++): ?>
+                            <div class="professor-assigned-course-placeholder" aria-hidden="true"></div>
+                        <?php endfor; ?>
+                    <?php endif; ?>
+                </div>
+            </section>
         </div>
 
 
@@ -427,13 +437,16 @@ require_once '../../includes/header.php';
                                                         <strong><?= htmlspecialchars($assignment['title']) ?></strong>
                                                         <?php if ($assignment['description'] !== ''): ?>
                                                             <div class="text-muted">
-                                                                <?= nl2br(htmlspecialchars($assignment['description'])) ?></div>
+                                                                <?= nl2br(htmlspecialchars($assignment['description'])) ?>
+                                                            </div>
                                                         <?php endif; ?>
                                                     </td>
                                                     <td><?= htmlspecialchars($assignment['course_code']) ?> &middot;
-                                                        <?= htmlspecialchars($assignment['course_name']) ?></td>
+                                                        <?= htmlspecialchars($assignment['course_name']) ?>
+                                                    </td>
                                                     <td><?= date('M j, Y', strtotime($assignment['due_at'])) ?> &middot;
-                                                        <?= date('g:i A', strtotime($assignment['due_at'])) ?></td>
+                                                        <?= date('g:i A', strtotime($assignment['due_at'])) ?>
+                                                    </td>
                                                     <td>
                                                         <form action="../../api/professor_process.php" method="POST"
                                                             onsubmit="return confirm('Delete this item for all enrolled students?');">
@@ -531,7 +544,8 @@ require_once '../../includes/header.php';
                     <select id="ann_course_id" name="course_id" class="form-control" required>
                         <?php foreach ($myCourses as $c): ?>
                             <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['course_code']) ?>:
-                                <?= htmlspecialchars($c['course_name']) ?></option>
+                                <?= htmlspecialchars($c['course_name']) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -584,6 +598,14 @@ require_once '../../includes/header.php';
                         <option value="Assessment" selected>Activity</option>
                         <option value="Quiz">Quiz</option>
                         <option value="Exam">Test</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="assignment_term">Term *</label>
+                    <select id="assignment_term" name="term" class="form-control" required>
+                        <option value="Prelim">Prelim</option>
+                        <option value="Midterm">Midterm</option>
+                        <option value="Final">Final</option>
                     </select>
                 </div>
                 <div class="form-group">

@@ -28,7 +28,8 @@ $publicAssistantCsrfToken = $_SESSION['contact_request_csrf'];
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/visual.css?v=202611041145">
+    <link rel="stylesheet" href="css/visual.css?v=202611051945">
+    <link rel="stylesheet" href="../css/announcement-attachments.css?v=202611062030">
     <link rel="stylesheet" href="../css/portal-toast.css?v=202611041835">
 </head>
 

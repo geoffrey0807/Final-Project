@@ -8,16 +8,17 @@ $dashboardAnnouncementsHref = $dashboardAnnouncementsHref ?? '../../visual/annou
         <?php foreach (array_slice($dashboardAnnouncements, 0, 6) as $announcement): ?>
             <a class="dashboard-announcement-item"
                 href="<?= htmlspecialchars($dashboardAnnouncementsHref, ENT_QUOTES, 'UTF-8') ?>">
-                <strong><?= htmlspecialchars($announcement['title'] ?? 'Announcement', ENT_QUOTES, 'UTF-8') ?></strong>
                 <?php if (!empty($announcement['course_code']) || !empty($announcement['first_name'])): ?>
                     <small>
                         <?php if (!empty($announcement['role'])): ?>
                             <?= htmlspecialchars(announcementAuthorLabel($announcement['role']), ENT_QUOTES, 'UTF-8') ?>
                         <?php endif; ?>
                         <?= !empty($announcement['course_code']) ? ' &middot; ' . htmlspecialchars($announcement['course_code'], ENT_QUOTES, 'UTF-8') : '' ?>
-                        <?= !empty($announcement['first_name']) ? ' &middot; ' . htmlspecialchars(trim(($announcement['first_name'] ?? '') . ' ' . ($announcement['last_name'] ?? '')), ENT_QUOTES, 'UTF-8') : '' ?>
+                        <?= !empty($announcement['first_name']) && ($announcement['role'] ?? '') !== 'registrar' ? ' &middot; ' . htmlspecialchars(trim(($announcement['first_name'] ?? '') . ' ' . ($announcement['last_name'] ?? '')), ENT_QUOTES, 'UTF-8') : '' ?>
                     </small>
                 <?php endif; ?>
+                <strong><?= htmlspecialchars($announcement['title'] ?? 'Announcement', ENT_QUOTES, 'UTF-8') ?></strong>
+                <p><?= nl2br(htmlspecialchars($announcement['message'] ?? '', ENT_QUOTES, 'UTF-8')) ?></p>
             </a>
         <?php endforeach; ?>
         <?php if (empty($dashboardAnnouncements)): ?>

@@ -31,6 +31,14 @@ require __DIR__ . '/portal_icon_rail.php';
                 </svg></span>
             <span class="student-nav-label">Courses &amp; Sections</span>
         </a>
+        <a class="student-sidebar-link<?= ($registrarView ?? '') === 'placements' ? ' active' : '' ?>"
+            href="<?= htmlspecialchars($portalViewBase . 'registrar_placements.php', ENT_QUOTES, 'UTF-8') ?>">
+            <span class="student-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24">
+                    <circle cx="8" cy="8" r="3" />
+                    <path d="M2.5 20v-1a5.5 5.5 0 0 1 11 0v1M16 5h5M18.5 2.5v5M16 14h5M16 18h5" />
+                </svg></span>
+            <span class="student-nav-label">Student Placements</span>
+        </a>
         <a class="student-sidebar-link<?= ($registrarView ?? '') === 'announcements' ? ' active' : '' ?>"
             href="<?= htmlspecialchars($portalViewBase . 'registrar_announcements.php', ENT_QUOTES, 'UTF-8') ?>">
             <span class="student-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24">
@@ -41,13 +49,18 @@ require __DIR__ . '/portal_icon_rail.php';
         <a class="student-sidebar-link<?= !empty($portalAnnouncementsActive) ? ' active' : '' ?>"
             href="<?= htmlspecialchars($portalAnnouncementsHref ?? '../announcements.php', ENT_QUOTES, 'UTF-8') ?>">
             <span class="student-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24">
-                    <path d="M4 14V9a1 1 0 0 1 1-1h3l9-4v14l-9-4H5a1 1 0 0 1-1-1ZM8 14l2 6h4l-2.5-7.1M20 8l2-1M20 12h2M20 16l2 1" />
+                    <path
+                        d="M4 14V9a1 1 0 0 1 1-1h3l9-4v14l-9-4H5a1 1 0 0 1-1-1ZM8 14l2 6h4l-2.5-7.1M20 8l2-1M20 12h2M20 16l2 1" />
                 </svg></span>
             <span class="student-nav-label">Announcements</span>
             <?= portalNotificationBadge($portalNotificationCounts['announcements'], 'announcement') ?>
         </a>
-        <a class="student-sidebar-link<?= ($registrarView ?? '') === 'support' ? ' active' : '' ?>" href="<?= htmlspecialchars($portalSupportHref ?? '../support/my_requests.php', ENT_QUOTES, 'UTF-8') ?>">
-            <span class="student-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></span>
+        <a class="student-sidebar-link<?= ($registrarView ?? '') === 'support' ? ' active' : '' ?>"
+            href="<?= htmlspecialchars($portalSupportHref ?? '../support/my_requests.php', ENT_QUOTES, 'UTF-8') ?>">
+            <span class="student-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="m4 7 8 6 8-6" />
+                </svg></span>
             <span class="student-nav-label">My Support Requests</span>
             <?= portalNotificationBadge($portalNotificationCounts['messages'], 'message') ?>
         </a>
@@ -70,19 +83,19 @@ require __DIR__ . '/portal_icon_rail.php';
         </a>
     </nav>
 </aside>
-<?php $fiscalYearStart = 2000; ?>
 <dialog class="student-fiscal-year-dialog" id="studentFiscalYearDialog" aria-labelledby="studentFiscalYearTitle">
     <form id="studentFiscalYearForm">
         <div class="student-fiscal-year-heading"><span class="student-eyebrow">Registrar portal</span><button
                 type="button" class="student-fiscal-year-close" data-fiscal-year-close
                 aria-label="Close dialog">&times;</button></div>
         <h2 id="studentFiscalYearTitle">Set an academic year</h2>
-        <p>Choose the academic year and semester you want to view.</p>
+        <p>Set the active academic year for the whole portal. New records will use it until you select another period.
+        </p>
         <label for="studentAcademicYear">Academic year</label>
         <select id="studentAcademicYear" name="academicYear" required>
             <option value="">Select an academic year</option>
-            <?php for ($year = $fiscalYearStart; $year <= (int) date('Y') + 5; $year++): ?>
-                <option value="<?= $year ?>-<?= $year + 1 ?>">AY <?= $year ?>–<?= $year + 1 ?></option><?php endfor; ?>
+            <?php foreach (academicYearStartOptions() as $year): ?>
+                <option value="<?= $year ?>-<?= $year + 1 ?>">AY <?= $year ?>–<?= $year + 1 ?></option><?php endforeach; ?>
         </select>
         <label for="studentSemester">Semester</label>
         <select id="studentSemester" name="semester" required>
@@ -92,11 +105,22 @@ require __DIR__ . '/portal_icon_rail.php';
         </select>
         <p class="student-fiscal-year-status" id="studentFiscalYearStatus" aria-live="polite"></p>
         <div class="student-fiscal-year-actions">
-            <button type="button" class="btn btn-outline" data-academic-clear>View all years</button>
+            <button type="button" class="btn btn-outline" data-academic-clear>Current period</button>
             <button type="button" class="btn btn-outline" data-fiscal-year-close>Cancel</button>
             <button type="submit" class="btn btn-primary">Save selection</button>
         </div>
     </form>
+    <dialog class="student-fiscal-year-confirm" id="studentFiscalYearConfirm"
+        aria-labelledby="studentFiscalYearConfirmTitle" aria-describedby="studentFiscalYearConfirmDescription">
+        <div class="student-fiscal-year-confirm-content">
+            <h2 id="studentFiscalYearConfirmTitle">Save this period selection?</h2>
+            <p id="studentFiscalYearConfirmDescription">The selected academic year and semester will be applied.</p>
+            <div class="student-fiscal-year-confirm-actions">
+                <button type="button" class="btn btn-outline" data-fiscal-year-save-cancel>No</button>
+                <button type="button" class="btn btn-primary" data-fiscal-year-save-confirm>Yes, save</button>
+            </div>
+        </div>
+    </dialog>
 </dialog>
 <button type="button" class="student-sidebar-backdrop" aria-label="Close registrar navigation"></button>
 <button type="button" class="student-mobile-toggle" aria-label="Open registrar navigation"

@@ -13,9 +13,11 @@ CREATE TABLE IF NOT EXISTS assignments (
     professor_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
     description TEXT NOT NULL,
+    term ENUM('Prelim', 'Midterm', 'Final') NOT NULL DEFAULT 'Prelim',
     assessment_type ENUM('Quiz', 'Assessment', 'Exam') NOT NULL DEFAULT 'Assessment',
     due_at DATETIME NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_assignments_course_term (course_id, term),
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
     FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

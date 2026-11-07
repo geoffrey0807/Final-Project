@@ -5,14 +5,6 @@ $portalNotificationCounts = portalNotificationCounts(
     (int) $_SESSION['user_id'],
     (string) $_SESSION['role']
 );
-$portalSettingsHref = match ($activeUserRole) {
-    'admin' => ($portalViewBase ?? '') . 'admin_settings.php',
-    'registrar' => ($portalViewBase ?? '') . 'registrar_settings.php',
-    'dean' => ($portalViewBase ?? '') . 'dean_settings.php',
-    'professor' => ($portalViewBase ?? '') . 'professor_settings.php',
-    'student' => ($portalViewBase ?? '') . 'student_settings.php',
-    default => 'index.php',
-};
 $portalProfileHref = match ($activeUserRole) {
     'admin' => ($portalViewBase ?? '') . 'admin_profile.php',
     'registrar' => ($portalViewBase ?? '') . 'registrar_profile.php',
@@ -71,29 +63,6 @@ $portalProfileHref = match ($activeUserRole) {
             </a>
         </div>
     </div>
-    <a class="portal-icon-button portal-settings-button"
-        href="<?= htmlspecialchars($portalSettingsHref, ENT_QUOTES, 'UTF-8') ?>" aria-label="Settings"
-        title="Settings">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-            <defs>
-                <mask id="portalSettingsGearCutout">
-                    <rect width="24" height="24" fill="#fff" />
-                    <circle cx="12" cy="12" r="4.35" fill="#000" />
-                </mask>
-            </defs>
-            <g fill="currentColor" mask="url(#portalSettingsGearCutout)">
-                <circle cx="12" cy="12" r="8.4" />
-                <rect x="9.8" y="0.7" width="4.4" height="10" rx="1.1" />
-                <rect x="9.8" y="0.7" width="4.4" height="10" rx="1.1" transform="rotate(45 12 12)" />
-                <rect x="9.8" y="0.7" width="4.4" height="10" rx="1.1" transform="rotate(90 12 12)" />
-                <rect x="9.8" y="0.7" width="4.4" height="10" rx="1.1" transform="rotate(135 12 12)" />
-                <rect x="9.8" y="0.7" width="4.4" height="10" rx="1.1" transform="rotate(180 12 12)" />
-                <rect x="9.8" y="0.7" width="4.4" height="10" rx="1.1" transform="rotate(225 12 12)" />
-                <rect x="9.8" y="0.7" width="4.4" height="10" rx="1.1" transform="rotate(270 12 12)" />
-                <rect x="9.8" y="0.7" width="4.4" height="10" rx="1.1" transform="rotate(315 12 12)" />
-            </g>
-        </svg>
-    </a>
 </aside>
 <?php if (!empty($showDashboardAnnouncements)): ?>
     <?php require __DIR__ . '/dashboard_announcements.php'; ?>

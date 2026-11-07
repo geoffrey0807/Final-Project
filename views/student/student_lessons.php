@@ -16,10 +16,10 @@ $lessonsStmt = $pdo->prepare("
         AND e.student_id = :student_id
         AND e.status = 'APPROVED'
         AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
-    WHERE 1 = 1" . academicPeriodDateFilter('l.created_at') . "
+    WHERE 1 = 1" . academicPeriodRecordFilter('l', 'l.created_at') . "
     ORDER BY l.created_at DESC
 ");
-$lessonsStmt->execute(array_merge(['student_id' => $studentId], academicPeriodDateParams()));
+$lessonsStmt->execute(array_merge(['student_id' => $studentId], academicPeriodRecordParams()));
 $lessons = $lessonsStmt->fetchAll();
 
 $pageTitle = 'Lessons | APEX Learning Hub';
@@ -54,12 +54,15 @@ require_once '../../includes/header.php';
                             <p><?= nl2br(htmlspecialchars($lesson['content'])) ?></p>
                             <small class="text-muted">
                                 <?= htmlspecialchars($lesson['course_name']) ?> &middot;
-                                Prof. <?= htmlspecialchars(trim($lesson['professor_first'] . ' ' . $lesson['professor_last'])) ?> &middot;
+                                Prof.
+                                <?= htmlspecialchars(trim($lesson['professor_first'] . ' ' . $lesson['professor_last'])) ?>
+                                &middot;
                                 <?= htmlspecialchars(date('M j, Y', strtotime($lesson['created_at']))) ?>
                             </small>
                             <?php if (!empty($lesson['file_name'])): ?>
                                 <p>
-                                    <a class="btn btn-outline btn-sm" href="../../api/download_lesson.php?id=<?= (int) $lesson['id'] ?>">
+                                    <a class="btn btn-outline btn-sm"
+                                        href="../../api/download_lesson.php?id=<?= (int) $lesson['id'] ?>">
                                         Download <?= htmlspecialchars($lesson['file_name']) ?>
                                     </a>
                                 </p>
