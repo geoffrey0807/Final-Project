@@ -45,7 +45,7 @@ function portalNotificationCounts(PDO $pdo, int $userId, string $role): array
         $announcementParams['department_id'] = $departmentId;
     }
 
-    $announcementDateFilter = academicPeriodDateFilter('a.created_at');
+    $announcementDateFilter = academicPeriodRecordFilter('a', 'a.created_at');
     $announcementStmt = $pdo->prepare("
         SELECT COUNT(DISTINCT a.id)
         FROM announcements a
@@ -63,8 +63,95 @@ function portalNotificationCounts(PDO $pdo, int $userId, string $role): array
     $announcementStmt->execute(array_merge(
         $announcementParams,
         ['read_user_id' => $userId],
-        academicPeriodDateParams()
+        academicPeriodRecordParams()
     ));
+
+    $todoCount = 0;
+    if ($role === 'student') {
+        $todoLastViewedAt = false;
+        $todoAcademicParams = academicPeriodRecordParams();
+        if (isset($todoAcademicParams['academic_year'], $todoAcademicParams['academic_semester'])) {
+            $todoViewStmt = $pdo->prepare("
+                SELECT last_viewed_at
+                FROM student_todo_views
+                WHERE student_id = :student_id
+                  AND academic_year = :academic_year
+                  AND semester = :semester
+            ");
+            $todoViewStmt->execute([
+                'student_id' => $userId,
+                'academic_year' => $todoAcademicParams['academic_year'],
+                'semester' => $todoAcademicParams['academic_semester'],
+            ]);
+            $todoLastViewedAt = $todoViewStmt->fetchColumn();
+        }
+        $assignmentTodoReadFilter = '';
+        $assessmentTodoReadFilter = '';
+        $assignmentTodoReadParams = [];
+        $assessmentTodoReadParams = [];
+        if ($todoLastViewedAt !== false) {
+            $assignmentTodoReadFilter = "
+                AND (a.created_at > :assignment_created_after
+                     OR e.applied_at > :assignment_enrollment_after)
+            ";
+            $assessmentTodoReadFilter = "
+                AND (a.created_at > :assessment_created_after
+                     OR e.applied_at > :assessment_enrollment_after
+                     OR submission.updated_at > :submission_updated_after)
+            ";
+            $assignmentTodoReadParams = [
+                'assignment_created_after' => $todoLastViewedAt,
+                'assignment_enrollment_after' => $todoLastViewedAt,
+            ];
+            $assessmentTodoReadParams = [
+                'assessment_created_after' => $todoLastViewedAt,
+                'assessment_enrollment_after' => $todoLastViewedAt,
+                'submission_updated_after' => $todoLastViewedAt,
+            ];
+        }
+        $assignmentTodoStmt = $pdo->prepare("
+            SELECT COUNT(*)
+            FROM assignments a
+            JOIN courses c ON c.id = a.course_id
+            JOIN enrollments e ON e.course_id = c.id
+                AND e.student_id = :student_id
+                AND e.status = 'APPROVED'
+            LEFT JOIN assignment_completions completion
+                ON completion.assignment_id = a.id
+                AND completion.student_id = e.student_id
+            WHERE completion.assignment_id IS NULL
+                            {$assignmentTodoReadFilter}
+              AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
+            " . academicPeriodRecordFilter('a', 'a.created_at') . "
+        ");
+        $assignmentTodoStmt->execute(array_merge(
+            ['student_id' => $userId],
+            $assignmentTodoReadParams,
+            academicPeriodRecordParams()
+        ));
+
+        $assessmentTodoStmt = $pdo->prepare("
+            SELECT COUNT(*)
+            FROM assessments a
+            JOIN courses c ON c.id = a.course_id
+            JOIN enrollments e ON e.course_id = c.id
+                AND e.student_id = :student_id
+                AND e.status = 'APPROVED'
+            LEFT JOIN student_submissions submission
+                ON submission.assessment_id = a.id
+                AND submission.student_id = e.student_id
+            WHERE (submission.status IS NULL OR submission.status IN ('Pending', 'Missed'))
+                            {$assessmentTodoReadFilter}
+              AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
+            " . academicPeriodRecordFilter('a', 'a.created_at') . "
+        ");
+        $assessmentTodoStmt->execute(array_merge(
+            ['student_id' => $userId],
+            $assessmentTodoReadParams,
+            academicPeriodRecordParams()
+        ));
+        $todoCount = (int) $assignmentTodoStmt->fetchColumn() + (int) $assessmentTodoStmt->fetchColumn();
+    }
 
     if ($role === 'admin') {
         $messageStmt = $pdo->prepare("
@@ -96,13 +183,14 @@ function portalNotificationCounts(PDO $pdo, int $userId, string $role): array
     }
     $messageStmt->execute(
         $role === 'admin'
-            ? ['user_id' => $userId]
-            : ['user_id' => $userId, 'read_user_id' => $userId]
+        ? ['user_id' => $userId]
+        : ['user_id' => $userId, 'read_user_id' => $userId]
     );
 
     return [
         'announcements' => (int) $announcementStmt->fetchColumn(),
         'messages' => (int) $messageStmt->fetchColumn(),
+        'todo' => $todoCount,
     ];
 }
 

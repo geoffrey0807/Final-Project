@@ -46,7 +46,8 @@ foreach ($submittedIds as $submittedId) {
 }
 $requestIds = array_values(array_unique($requestIds));
 if (count($requestIds) !== count($submittedIds)) {
-    $redirectWithMessage('error', 'Select each request only once.');
+    $redirectWithMessage('error', 'Select each request only once.
+    ');
 }
 
 $placeholders = [];

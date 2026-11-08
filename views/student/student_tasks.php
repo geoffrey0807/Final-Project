@@ -3,72 +3,156 @@ require_once '../../includes/session_check.php';
 checkAccess(['student'], '../../auth/login.php');
 require_once '../../config/db.php';
 require_once '../../includes/academic_access.php';
-require_once '../../includes/announcement_access.php';
 
 $studentId = (int) $_SESSION['user_id'];
-$announcementAudienceFilter = announcementAudienceVisibilitySql('a', 'student');
+$requestedCourseId = $_GET['course_id'] ?? null;
+$courseFilterId = 0;
+if ($requestedCourseId !== null) {
+    $validatedCourseId = filter_var($requestedCourseId, FILTER_VALIDATE_INT);
+    if ($validatedCourseId === false || $validatedCourseId === null || $validatedCourseId < 1) {
+        http_response_code(404);
+        exit('Class not found.');
+    }
+    $courseFilterId = (int) $validatedCourseId;
+}
+$courseFilterSql = $courseFilterId > 0 ? ' AND c.id = :course_id' : '';
+$assignmentParams = [
+    'enrolled_student_id' => $studentId,
+    'completed_student_id' => $studentId,
+];
+if ($courseFilterId > 0) {
+    $assignmentParams['course_id'] = $courseFilterId;
+}
 $assignmentsStmt = $pdo->prepare("
-    SELECT a.id, a.title, a.description, a.due_at, c.course_code, c.course_name,
+    SELECT a.id, a.title, a.description, a.assessment_type, a.due_at,
+           c.id AS course_id, c.course_code, c.course_name,
            ac.completed_at, ac.score, ac.total_questions
     FROM assignments a
     JOIN courses c ON c.id = a.course_id
     JOIN enrollments e ON e.course_id = c.id AND e.student_id = :enrolled_student_id AND e.status = 'APPROVED'
     LEFT JOIN assignment_completions ac ON ac.assignment_id = a.id AND ac.student_id = :completed_student_id
     WHERE " . studentEnrollmentCourseScopeSql('c', 'e') . "
-      " . academicPeriodDateFilter('a.due_at') . "
+      {$courseFilterSql}
+    " . academicPeriodRecordFilter('a', 'a.created_at') . "
     ORDER BY (ac.completed_at IS NOT NULL), a.due_at ASC
 ");
-$assignmentsStmt->execute(array_merge([
-    'enrolled_student_id' => $studentId,
-    'completed_student_id' => $studentId,
-], academicPeriodDateParams()));
+$assignmentsStmt->execute(array_merge($assignmentParams, academicPeriodRecordParams()));
 $assignments = $assignmentsStmt->fetchAll();
+$assessmentParams = [
+    'enrolled_student_id' => $studentId,
+    'submission_student_id' => $studentId,
+];
+if ($courseFilterId > 0) {
+    $assessmentParams['course_id'] = $courseFilterId;
+}
+$assessmentsStmt = $pdo->prepare("
+    SELECT a.id, a.title, a.description, a.term, a.assessment_type,
+           a.deadline, submission.status AS submission_status,
+           submission.reopened_until, c.id AS course_id, c.course_code, c.course_name
+    FROM assessments a
+    JOIN courses c ON c.id = a.course_id
+    JOIN enrollments e ON e.course_id = c.id
+        AND e.student_id = :enrolled_student_id
+        AND e.status = 'APPROVED'
+    LEFT JOIN student_submissions submission
+        ON submission.assessment_id = a.id
+        AND submission.student_id = :submission_student_id
+    WHERE (submission.status IS NULL OR submission.status IN ('Pending', 'Missed'))
+      AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
+      {$courseFilterSql}
+    " . academicPeriodRecordFilter('a', 'a.created_at') . "
+    ORDER BY COALESCE(submission.reopened_until, a.deadline) ASC
+");
+$assessmentsStmt->execute(array_merge($assessmentParams, academicPeriodRecordParams()));
+$assessments = $assessmentsStmt->fetchAll();
 $questionStmt = $pdo->prepare("SELECT * FROM assignment_questions WHERE assignment_id = :assignment_id ORDER BY question_order, id");
 $questionsByAssignment = [];
 foreach ($assignments as $assignment) {
     $questionStmt->execute(['assignment_id' => (int) $assignment['id']]);
     $questionsByAssignment[(int) $assignment['id']] = $questionStmt->fetchAll();
 }
-$pendingAssignments = array_values(array_filter($assignments, static fn($assignment) => !$assignment['completed_at']));
-$completedAssignments = array_values(array_filter($assignments, static fn($assignment) => $assignment['completed_at']));
+$manilaTimezone = new DateTimeZone('Asia/Manila');
+$now = new DateTimeImmutable('now', $manilaTimezone);
+$todoGroups = [
+    'all' => [],
+    'assigned' => [],
+    'due_today' => [],
+    'missed' => [],
+];
+$todoLabels = [
+    'all' => 'All',
+    'assigned' => 'Assigned',
+    'due_today' => 'Due Today',
+    'missed' => 'Missed',
+];
+$todoStatuses = array_keys($todoLabels);
+$selectedTodoStatus = $_GET['status'] ?? 'all';
+if (!is_string($selectedTodoStatus) || !in_array($selectedTodoStatus, $todoStatuses, true)) {
+    $selectedTodoStatus = 'all';
+}
+$today = $now->format('Y-m-d');
+$classifyTodoStatus = static function (string $dueAt, DateTimeImmutable $now, bool $alreadyMissed = false) use ($today): string {
+    if ($alreadyMissed) {
+        return 'missed';
+    }
+    $deadline = new DateTimeImmutable($dueAt, new DateTimeZone('Asia/Manila'));
+    if ($deadline < $now) {
+        return 'missed';
+    }
+    return $deadline->format('Y-m-d') === $today ? 'due_today' : 'assigned';
+};
+foreach ($assignments as $assignment) {
+    if ($assignment['completed_at']) {
+        continue;
+    }
+    $assignment['task_kind'] = 'assignment';
+    $assignment['task_key'] = 'assignment-' . (int) $assignment['id'];
+    $assignment['todo_status'] = $classifyTodoStatus((string) $assignment['due_at'], $now);
+    $todoGroups['all'][] = $assignment;
+    $todoGroups[$assignment['todo_status']][] = $assignment;
+}
+$manilaTimezone = new DateTimeZone('Asia/Manila');
+foreach ($assessments as $assessment) {
+    $assessment['due_at'] = $assessment['reopened_until'] ?: $assessment['deadline'];
+    $assessment['task_kind'] = 'assessment';
+    $assessment['task_key'] = 'assessment-' . (int) $assessment['id'];
+    $assessment['todo_status'] = $classifyTodoStatus(
+        (string) $assessment['due_at'],
+        $now,
+        $assessment['submission_status'] === 'Missed'
+    );
+    $todoGroups['all'][] = $assessment;
+    $todoGroups[$assessment['todo_status']][] = $assessment;
+}
+foreach ($todoGroups as &$groupTasks) {
+    usort($groupTasks, static fn(array $left, array $right): int => strtotime((string) $left['due_at']) <=> strtotime((string) $right['due_at']));
+}
+unset($groupTasks);
+$studentPendingTaskCount = count($todoGroups['all']);
+$emptyMessages = [
+    'all' => 'There are no tasks for this class period.',
+    'assigned' => 'There is no current assignment to do',
+    'due_today' => 'There is no due to do',
+    'missed' => 'There is no missed assignment',
+];
 
-$applicationsStmt = $pdo->prepare("
-    SELECT e.id, e.status, e.applied_at, c.course_code, c.course_name
-    FROM enrollments e
-    JOIN courses c ON c.id = e.course_id
-    WHERE e.student_id = :student_id AND e.status = 'PENDING'
-      AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
-      " . academicPeriodDateFilter('e.applied_at') . "
-    ORDER BY e.applied_at ASC
-");
-$applicationsStmt->execute(array_merge(['student_id' => $studentId], academicPeriodDateParams()));
-$pendingApplications = $applicationsStmt->fetchAll();
-$studentPendingTaskCount = count($pendingAssignments) + count($pendingApplications);
+$todoAcademicParams = academicPeriodRecordParams();
+if (isset($todoAcademicParams['academic_year'], $todoAcademicParams['academic_semester'])) {
+    $markTodoViewedStmt = $pdo->prepare("
+        INSERT INTO student_todo_views (student_id, academic_year, semester, last_viewed_at)
+        VALUES (:student_id, :academic_year, :semester, CURRENT_TIMESTAMP)
+        ON DUPLICATE KEY UPDATE last_viewed_at = CURRENT_TIMESTAMP
+    ");
+    $markTodoViewedStmt->execute([
+        'student_id' => $studentId,
+        'academic_year' => $todoAcademicParams['academic_year'],
+        'semester' => $todoAcademicParams['academic_semester'],
+    ]);
+}
 
-$announcementCountStmt = $pdo->prepare("
-    SELECT COUNT(*)
-    FROM announcements a
-    WHERE (a.course_id IS NULL
-       OR EXISTS (
-            SELECT 1 FROM enrollments e
-            WHERE e.course_id = a.course_id
-              AND e.student_id = :student_id
-              AND e.status = 'APPROVED'
-              AND EXISTS (
-                  SELECT 1 FROM course_programs allowed_program
-                  JOIN programs allowed_track ON allowed_track.id = allowed_program.program_id AND allowed_track.is_active = 1
-                  JOIN users eligible_student ON eligible_student.program_id = allowed_track.id
-                      AND eligible_student.role = 'student'
-                  WHERE allowed_program.course_id = a.course_id AND eligible_student.id = e.student_id
-              )
-       )) AND {$announcementAudienceFilter}" . academicPeriodDateFilter('a.created_at') . "
-");
-$announcementCountStmt->execute(array_merge(['student_id' => $studentId], academicPeriodDateParams()));
-$studentAnnouncementCount = (int) $announcementCountStmt->fetchColumn();
-
-$pageTitle = 'Pending Tasks | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202610291355', '../../css/student.css?v=202611012000'];
-$extraJs = '../../js/student.js?v=202610291930';
+$pageTitle = 'To-do List | APEX Learning Hub';
+$extraCss = ['../../css/admin.css?v=202611061140', '../../css/student.css?v=202611061610'];
+$extraJs = '../../js/student.js?v=202611041145';
 $bodyClass = 'admin-dashboard student-dashboard';
 $useVisualTheme = true;
 $studentPage = 'tasks';
@@ -78,89 +162,105 @@ require_once '../../includes/header.php';
 <div class="student-dashboard-shell" id="studentDashboardShell">
     <?php require '../../includes/student_sidebar.php'; ?>
     <div class="container student-dashboard-content">
-        <header class="student-page-header">
-            <span class="student-eyebrow">Stay on track</span>
-            <h1>Pending Tasks</h1>
-            <p>Assignments for your enrolled courses and enrollment decisions still in progress.</p>
+        <header class="student-todo-header">
+            <form class="student-todo-filter" method="GET" action="student_tasks.php">
+                <?php if ($courseFilterId > 0): ?>
+                    <input type="hidden" name="course_id" value="<?= $courseFilterId ?>">
+                <?php endif; ?>
+                <label for="studentTodoStatus">Status</label>
+                <select id="studentTodoStatus" name="status" onchange="this.form.submit()">
+                    <?php foreach ($todoLabels as $statusValue => $statusLabel): ?>
+                        <option value="<?= htmlspecialchars($statusValue, ENT_QUOTES, 'UTF-8') ?>"
+                            <?= $selectedTodoStatus === $statusValue ? ' selected' : '' ?>>
+                            <?= htmlspecialchars($statusLabel, ENT_QUOTES, 'UTF-8') ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </form>
         </header>
 
-        <section class="student-page-list">
-            <div class="student-list-section-heading">
-                <h2>Assignments to complete <span class="tab-badge"><?= count($pendingAssignments) ?></span></h2>
-            </div>
-            <?php if (empty($pendingAssignments)): ?>
-                <div class="student-overview-card student-empty-state">
-                    <p>No assignments are currently waiting for you.</p>
-                </div>
+        <section class="student-page-list student-todo-panel">
+            <?php $groupTasks = $todoGroups[$selectedTodoStatus]; ?>
+            <?php if (!$groupTasks): ?>
+                <p class="student-todo-empty">
+                    <?= htmlspecialchars($emptyMessages[$selectedTodoStatus], ENT_QUOTES, 'UTF-8') ?>
+                </p>
             <?php else: ?>
-                <?php foreach ($pendingAssignments as $assignment): ?>
-                    <article class="student-overview-card student-task-full">
-                        <form action="../../api/student_process.php" method="POST" class="student-assignment-form">
-                            <input type="hidden" name="action" value="complete_assignment">
-                            <input type="hidden" name="assignment_id" value="<?= (int) $assignment['id'] ?>">
-                            <div class="student-task-full-copy">
-                                <span class="student-eyebrow"><?= htmlspecialchars($assignment['course_code']) ?></span>
-                                <h3><?= htmlspecialchars($assignment['title']) ?></h3>
-                                <?php if ($assignment['description'] !== ''): ?><p><?= nl2br(htmlspecialchars($assignment['description'])) ?></p><?php endif; ?>
-                                <?php foreach ($questionsByAssignment[(int) $assignment['id']] as $question): ?>
-                                    <div class="student-assessment-question">
-                                        <label for="answer_<?= (int) $question['id'] ?>"><?= htmlspecialchars($question['question_text']) ?></label>
-                                        <?php $choices = $question['choices'] ? json_decode($question['choices'], true) : []; ?>
-                                        <?php if ($question['question_type'] === 'multiple_choice' && is_array($choices) && $choices): ?>
-                                            <select id="answer_<?= (int) $question['id'] ?>" name="answers[<?= (int) $question['id'] ?>]" required>
-                                                <option value="">Select an answer</option>
-                                                <?php foreach ($choices as $choice): ?><option value="<?= htmlspecialchars($choice) ?>"><?= htmlspecialchars($choice) ?></option><?php endforeach; ?>
-                                            </select>
-                                        <?php else: ?>
-                                            <input id="answer_<?= (int) $question['id'] ?>" type="text" name="answers[<?= (int) $question['id'] ?>]" required>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
+                <?php foreach ($groupTasks as $task): ?>
+                    <?php $taskQuestions = $task['task_kind'] === 'assignment' ? ($questionsByAssignment[(int) $task['id']] ?? []) : []; ?>
+                    <article class="student-todo-item" id="<?= htmlspecialchars($task['task_key'], ENT_QUOTES, 'UTF-8') ?>">
+                        <?php if ($task['task_kind'] === 'assessment'): ?>
+                            <div class="student-assignment-form">
+                                <div class="student-task-full-copy">
+                                    <span class="student-eyebrow">
+                                        <?= htmlspecialchars($task['course_code'], ENT_QUOTES, 'UTF-8') ?>
+                                        · <?= htmlspecialchars($task['assessment_type'], ENT_QUOTES, 'UTF-8') ?>
+                                        · <?= htmlspecialchars($todoLabels[$task['todo_status']], ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                    <h3><?= htmlspecialchars($task['title'], ENT_QUOTES, 'UTF-8') ?></h3>
+                                    <?php if ($task['description'] !== ''): ?>
+                                        <p><?= nl2br(htmlspecialchars($task['description'], ENT_QUOTES, 'UTF-8')) ?></p>
+                                    <?php endif; ?>
+                                </div>
+                                <time class="student-task-due<?= $task['todo_status'] === 'missed' ? ' overdue' : '' ?>"
+                                    datetime="<?= htmlspecialchars(date('c', strtotime($task['due_at'])), ENT_QUOTES, 'UTF-8') ?>">
+                                    Due <?= htmlspecialchars(date('M j, Y', strtotime($task['due_at'])), ENT_QUOTES, 'UTF-8') ?>
+                                    · <?= htmlspecialchars(date('g:i A', strtotime($task['due_at'])), ENT_QUOTES, 'UTF-8') ?>
+                                </time>
+                                <a class="btn btn-primary"
+                                    href="student_course.php?id=<?= (int) $task['course_id'] ?>&amp;area=assessments&amp;term=<?= urlencode($task['term']) ?>">
+                                    Open Class Assessments
+                                </a>
                             </div>
-                            <time class="student-task-due<?= strtotime($assignment['due_at']) < time() ? ' overdue' : '' ?>" datetime="<?= htmlspecialchars(date('c', strtotime($assignment['due_at']))) ?>">
-                                Due <?= date('M j, Y', strtotime($assignment['due_at'])) ?> &middot; <?= date('g:i A', strtotime($assignment['due_at'])) ?>
-                            </time>
-                            <button type="submit" class="btn btn-primary"><?= $questionsByAssignment[(int) $assignment['id']] ? 'Submit Assessment' : 'Mark Complete' ?></button>
-                        </form>
+                        <?php else: ?>
+                            <form action="../../api/student_process.php" method="POST" class="student-assignment-form">
+                                <input type="hidden" name="action" value="complete_assignment">
+                                <input type="hidden" name="assignment_id" value="<?= (int) $task['id'] ?>">
+                                <div class="student-task-full-copy">
+                                    <span class="student-eyebrow">
+                                        <?= htmlspecialchars($task['course_code'], ENT_QUOTES, 'UTF-8') ?>
+                                        · <?= htmlspecialchars($task['assessment_type'], ENT_QUOTES, 'UTF-8') ?>
+                                        · <?= htmlspecialchars($todoLabels[$task['todo_status']], ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
+                                    <h3><?= htmlspecialchars($task['title'], ENT_QUOTES, 'UTF-8') ?></h3>
+                                    <?php if ($task['description'] !== ''): ?>
+                                        <p><?= nl2br(htmlspecialchars($task['description'], ENT_QUOTES, 'UTF-8')) ?></p>
+                                    <?php endif; ?>
+                                    <?php foreach ($taskQuestions as $question): ?>
+                                        <div class="student-assessment-question">
+                                            <label for="answer_<?= (int) $question['id'] ?>">
+                                                <?= htmlspecialchars($question['question_text'], ENT_QUOTES, 'UTF-8') ?>
+                                            </label>
+                                            <?php $choices = $question['choices'] ? json_decode($question['choices'], true) : []; ?>
+                                            <?php if ($question['question_type'] === 'multiple_choice' && is_array($choices) && $choices): ?>
+                                                <select id="answer_<?= (int) $question['id'] ?>"
+                                                    name="answers[<?= (int) $question['id'] ?>]" required>
+                                                    <option value="">Select an answer</option>
+                                                    <?php foreach ($choices as $choice): ?>
+                                                        <option value="<?= htmlspecialchars($choice, ENT_QUOTES, 'UTF-8') ?>">
+                                                            <?= htmlspecialchars($choice, ENT_QUOTES, 'UTF-8') ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            <?php else: ?>
+                                                <input id="answer_<?= (int) $question['id'] ?>" type="text"
+                                                    name="answers[<?= (int) $question['id'] ?>]" required>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <time class="student-task-due<?= $task['todo_status'] === 'missed' ? ' overdue' : '' ?>"
+                                    datetime="<?= htmlspecialchars(date('c', strtotime($task['due_at'])), ENT_QUOTES, 'UTF-8') ?>">
+                                    Due <?= htmlspecialchars(date('M j, Y', strtotime($task['due_at'])), ENT_QUOTES, 'UTF-8') ?>
+                                    · <?= htmlspecialchars(date('g:i A', strtotime($task['due_at'])), ENT_QUOTES, 'UTF-8') ?>
+                                </time>
+                                <button type="submit" class="btn btn-primary">
+                                    <?= $taskQuestions ? 'Submit Assessment' : 'Mark Complete' ?>
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     </article>
                 <?php endforeach; ?>
-            <?php endif; ?>
-
-            <div class="student-list-section-heading">
-                <h2>Enrollment decisions <span class="tab-badge"><?= count($pendingApplications) ?></span></h2>
-            </div>
-            <?php if (empty($pendingApplications)): ?>
-                <div class="student-overview-card student-empty-state">
-                    <p>No enrollment applications are awaiting a decision.</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($pendingApplications as $application): ?>
-                    <article class="student-overview-card student-task-full">
-                        <span class="student-check-empty student-check-static" aria-hidden="true"></span>
-                        <div class="student-task-full-copy">
-                            <span class="student-eyebrow"><?= htmlspecialchars($application['course_code']) ?></span>
-                            <h3>Enrollment decision pending</h3>
-                            <p><?= htmlspecialchars($application['course_name']) ?> &middot; Applied <?= date('M j, Y', strtotime($application['applied_at'])) ?></p>
-                        </div>
-                        <span class="student-task-status">Awaiting review</span>
-                    </article>
-                <?php endforeach; ?>
-            <?php endif; ?>
-
-            <?php if (!empty($completedAssignments)): ?>
-                <details class="student-completed-tasks">
-                    <summary>Completed assignments (<?= count($completedAssignments) ?>)</summary>
-                    <?php foreach ($completedAssignments as $assignment): ?>
-                        <div class="student-completed-task">
-                            <span aria-hidden="true">&#10003;</span>
-                            <strong><?= htmlspecialchars($assignment['title']) ?></strong>
-                            <small><?= htmlspecialchars($assignment['course_code']) ?></small>
-                            <?php if ((int) $assignment['total_questions'] > 0): ?>
-                                <small>Score: <?= (int) $assignment['score'] ?>/<?= (int) $assignment['total_questions'] ?></small>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-                </details>
             <?php endif; ?>
         </section>
     </div>

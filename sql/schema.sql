@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS users (
     program VARCHAR(150) DEFAULT NULL,
     program_id INT DEFAULT NULL,
     department_id INT DEFAULT NULL,
+    year_level TINYINT UNSIGNED DEFAULT NULL,
+    cohort_section VARCHAR(20) DEFAULT NULL,
     role ENUM('admin', 'registrar', 'dean', 'professor', 'student') NOT NULL DEFAULT 'student',
     profile_photo VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -71,10 +73,87 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_users_created_by (created_by),
     INDEX idx_users_program_id (program_id),
     INDEX idx_users_department_role (department_id, role),
+    INDEX idx_users_student_cohort (program_id, year_level, cohort_section, role),
     UNIQUE KEY uq_users_id_number (id_number),
     CONSTRAINT fk_users_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_users_program FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE SET NULL,
     CONSTRAINT fk_users_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS academic_periods (
+    academic_year CHAR(9) NOT NULL,
+    semester ENUM('first', 'second') NOT NULL,
+    status ENUM('planned', 'open', 'closed') NOT NULL DEFAULT 'planned',
+    opened_at DATETIME DEFAULT NULL,
+    closed_at DATETIME DEFAULT NULL,
+    PRIMARY KEY (academic_year, semester)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO academic_periods (academic_year, semester, status, opened_at)
+VALUES (
+    CONCAT(
+        IF(MONTH(CURRENT_DATE) >= 7, YEAR(CURRENT_DATE), YEAR(CURRENT_DATE) - 1),
+        '-',
+        IF(MONTH(CURRENT_DATE) >= 7, YEAR(CURRENT_DATE) + 1, YEAR(CURRENT_DATE))
+    ),
+    IF(MONTH(CURRENT_DATE) BETWEEN 7 AND 11, 'first', 'second'),
+    'open',
+    NOW()
+)
+ON DUPLICATE KEY UPDATE status = 'open', opened_at = COALESCE(opened_at, NOW()), closed_at = NULL;
+
+INSERT IGNORE INTO academic_periods (academic_year, semester, status, opened_at, closed_at)
+SELECT academic_year, semester,
+       CASE
+           WHEN academic_year = current_year AND semester = current_semester THEN 'open'
+           WHEN period_end <= CURRENT_DATE THEN 'closed'
+           ELSE 'planned'
+       END,
+       CASE WHEN academic_year = current_year AND semester = current_semester THEN NOW() ELSE NULL END,
+       CASE
+           WHEN period_end <= CURRENT_DATE
+                AND NOT (academic_year = current_year AND semester = current_semester)
+           THEN period_end
+           ELSE NULL
+       END
+FROM (
+    SELECT CONCAT(years.start_year, '-', years.start_year + 1) AS academic_year,
+           semesters.semester,
+           IF(semesters.semester = 'first',
+              STR_TO_DATE(CONCAT(years.start_year, '-12-01'), '%Y-%m-%d'),
+              STR_TO_DATE(CONCAT(years.start_year + 1, '-07-01'), '%Y-%m-%d')) AS period_end,
+           CONCAT(
+               IF(MONTH(CURRENT_DATE) >= 7, YEAR(CURRENT_DATE), YEAR(CURRENT_DATE) - 1),
+               '-',
+               IF(MONTH(CURRENT_DATE) >= 7, YEAR(CURRENT_DATE) + 1, YEAR(CURRENT_DATE))
+           ) AS current_year,
+           IF(MONTH(CURRENT_DATE) BETWEEN 7 AND 11, 'first', 'second') AS current_semester
+    FROM (
+        SELECT 2022 AS start_year UNION ALL SELECT 2023 UNION ALL SELECT 2024
+        UNION ALL SELECT 2025 UNION ALL SELECT 2026 UNION ALL SELECT 2027
+    ) years
+    CROSS JOIN (
+        SELECT 'first' AS semester UNION ALL SELECT 'second'
+    ) semesters
+) periods;
+
+CREATE TABLE IF NOT EXISTS student_academic_placements (
+    student_id INT NOT NULL,
+    academic_year CHAR(9) NOT NULL,
+    semester ENUM('first', 'second') NOT NULL,
+    program_id INT NOT NULL,
+    year_level TINYINT UNSIGNED NOT NULL,
+    cohort_section VARCHAR(20) DEFAULT NULL,
+    progression_status ENUM('initial', 'new', 'continued', 'promoted', 'retake') NOT NULL,
+    assigned_by INT DEFAULT NULL,
+    assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (student_id, academic_year, semester),
+    INDEX idx_student_placements_period (academic_year, semester, program_id, year_level, cohort_section),
+    CONSTRAINT fk_student_placements_student FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_student_placements_program FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_student_placements_assigned_by FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_student_placements_period FOREIGN KEY (academic_year, semester)
+        REFERENCES academic_periods(academic_year, semester) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS admin_password_changes (
@@ -126,16 +205,24 @@ CREATE TABLE IF NOT EXISTS support_request_reads (
 
 CREATE TABLE IF NOT EXISTS courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    course_code VARCHAR(20) NOT NULL UNIQUE,
+    course_code VARCHAR(20) NOT NULL,
     course_name VARCHAR(100) NOT NULL,
     section_name VARCHAR(50) NOT NULL DEFAULT 'General',
     professor_id INT DEFAULT NULL,
-    max_capacity INT DEFAULT 30,
+    max_capacity INT DEFAULT 10,
     meeting_days VARCHAR(80) DEFAULT NULL,
     start_time TIME DEFAULT NULL,
     end_time TIME DEFAULT NULL,
     room VARCHAR(100) DEFAULT NULL,
+    academic_year CHAR(9) NOT NULL,
+    semester ENUM('first', 'second') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    archived_at TIMESTAMP NULL DEFAULT NULL,
+    active_course_code VARCHAR(20) GENERATED ALWAYS AS (
+        CASE WHEN archived_at IS NULL THEN course_code ELSE NULL END
+    ) STORED,
+    UNIQUE KEY uq_courses_period_code_section (academic_year, semester, active_course_code, section_name),
+    INDEX idx_courses_period_professor (academic_year, semester, professor_id),
     FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -152,12 +239,20 @@ CREATE TABLE IF NOT EXISTS enrollments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     course_id INT NOT NULL,
+    course_code VARCHAR(20) NOT NULL,
+    academic_year CHAR(9) NOT NULL,
+    semester ENUM('first', 'second') NOT NULL,
     status ENUM('PENDING', 'APPROVED', 'REJECTED') DEFAULT 'PENDING',
+    grade_status ENUM('Pass', 'Fail', 'Drop') DEFAULT NULL,
+    grade_released_at DATETIME DEFAULT NULL,
+    final_grade DECIMAL(3,2) DEFAULT NULL,
     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     decided_at TIMESTAMP NULL DEFAULT NULL,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_enrollment (student_id, course_id)
+    UNIQUE KEY unique_enrollment (student_id, course_id),
+    UNIQUE KEY uq_enrollments_student_course_period (student_id, course_code, academic_year, semester),
+    INDEX idx_enrollments_period_student (academic_year, semester, student_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS announcements (
@@ -169,8 +264,12 @@ CREATE TABLE IF NOT EXISTS announcements (
     image_path VARCHAR(255) DEFAULT NULL,
     is_homepage_notice TINYINT(1) NOT NULL DEFAULT 0,
     homepage_category ENUM('academic', 'system', 'event', 'policy') DEFAULT NULL,
+    academic_year CHAR(9) NOT NULL,
+    semester ENUM('first', 'second') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_announcements_homepage_latest (is_homepage_notice, created_at, id),
+    INDEX idx_announcements_period (academic_year, semester, created_at),
     FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -218,15 +317,30 @@ CREATE TABLE IF NOT EXISTS user_announcement_reads (
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS student_todo_views (
+    student_id INT NOT NULL,
+    academic_year CHAR(9) NOT NULL,
+    semester ENUM('first', 'second') NOT NULL,
+    last_viewed_at DATETIME NOT NULL,
+    PRIMARY KEY (student_id, academic_year, semester),
+    INDEX idx_student_todo_views_period (academic_year, semester),
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS assignments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     professor_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
     description TEXT NOT NULL,
+    term ENUM('Prelim', 'Midterm', 'Final') NOT NULL DEFAULT 'Prelim',
     assessment_type ENUM('Quiz', 'Assessment', 'Exam') NOT NULL DEFAULT 'Assessment',
     due_at DATETIME NOT NULL,
+    academic_year CHAR(9) NOT NULL,
+    semester ENUM('first', 'second') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_assignments_period (academic_year, semester, course_id),
+    INDEX idx_assignments_course_term (course_id, term),
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
     FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -248,11 +362,16 @@ CREATE TABLE IF NOT EXISTS lessons (
     professor_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
     content TEXT NOT NULL,
+    term ENUM('Prelim', 'Midterm', 'Final') NOT NULL DEFAULT 'Prelim',
     file_name VARCHAR(255) DEFAULT NULL,
     file_path VARCHAR(255) DEFAULT NULL,
     file_mime VARCHAR(100) DEFAULT NULL,
     file_size INT UNSIGNED DEFAULT NULL,
+    academic_year CHAR(9) NOT NULL,
+    semester ENUM('first', 'second') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_lessons_period (academic_year, semester, course_id),
+    INDEX idx_lessons_course_term (course_id, term),
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
     FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -265,6 +384,58 @@ CREATE TABLE IF NOT EXISTS assignment_completions (
     completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (assignment_id, student_id),
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS assessments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id INT NOT NULL,
+    professor_id INT NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    description TEXT NOT NULL,
+    term ENUM('Prelim', 'Midterm', 'Final') NOT NULL,
+    assessment_type ENUM('Quiz', 'Exam') NOT NULL,
+    question_format ENUM('Multiple Choice', 'True or False', 'Mixed') NOT NULL,
+    total_points DECIMAL(8,2) NOT NULL,
+    deadline DATETIME NOT NULL,
+    time_limit_minutes SMALLINT UNSIGNED DEFAULT NULL,
+    academic_year CHAR(9) NOT NULL,
+    semester ENUM('first', 'second') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_assessments_course_term (course_id, term, deadline),
+    INDEX idx_assessments_period (academic_year, semester, course_id),
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+    FOREIGN KEY (professor_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS assessment_questions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    assessment_id INT NOT NULL,
+    question_text TEXT NOT NULL,
+    question_type ENUM('multiple_choice', 'true_false') NOT NULL,
+    choices_json JSON DEFAULT NULL,
+    correct_answer VARCHAR(1000) DEFAULT NULL,
+    points DECIMAL(8,2) NOT NULL DEFAULT 1,
+    question_order INT NOT NULL DEFAULT 1,
+    INDEX idx_assessment_questions_order (assessment_id, question_order),
+    FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS student_submissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    assessment_id INT NOT NULL,
+    student_id INT NOT NULL,
+    score DECIMAL(8,2) DEFAULT NULL,
+    status ENUM('Pending', 'Submitted', 'Missed') NOT NULL DEFAULT 'Pending',
+    answers_json JSON DEFAULT NULL,
+    submitted_at DATETIME DEFAULT NULL,
+    reopened_until DATETIME DEFAULT NULL,
+    assessment_started_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_student_submission (assessment_id, student_id),
+    INDEX idx_student_submissions_student_status (student_id, status),
+    FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

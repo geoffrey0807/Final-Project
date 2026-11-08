@@ -28,10 +28,10 @@ $approvedStmt = $pdo->prepare("
     LEFT JOIN users u ON c.professor_id = u.id
     WHERE e.student_id = :sid AND e.status = 'APPROVED'
       AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
-      " . academicPeriodDateFilter('COALESCE(e.decided_at, e.applied_at)') . "
+    " . academicPeriodRecordFilter('e', 'e.applied_at') . "
     ORDER BY c.course_code ASC
 ");
-$approvedStmt->execute(array_merge(['sid' => $studentId], academicPeriodDateParams()));
+$approvedStmt->execute(array_merge(['sid' => $studentId], academicPeriodRecordParams()));
 $enrolledCourses = $approvedStmt->fetchAll();
 
 $myAppsStmt = $pdo->prepare("
@@ -43,10 +43,10 @@ $myAppsStmt = $pdo->prepare("
     LEFT JOIN users u ON c.professor_id = u.id
     WHERE e.student_id = :sid
       AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
-      " . academicPeriodDateFilter('e.applied_at') . "
+    " . academicPeriodRecordFilter('e', 'e.applied_at') . "
     ORDER BY e.applied_at DESC
 ");
-$myAppsStmt->execute(array_merge(['sid' => $studentId], academicPeriodDateParams()));
+$myAppsStmt->execute(array_merge(['sid' => $studentId], academicPeriodRecordParams()));
 $myApplications = $myAppsStmt->fetchAll();
 
 $catalogStmt = $pdo->prepare("
@@ -65,13 +65,13 @@ $catalogStmt = $pdo->prepare("
            ) AS program_eligible
     FROM courses c
     LEFT JOIN users u ON c.professor_id = u.id
-    WHERE 1 = 1" . academicPeriodDateFilter('c.created_at') . "
+    WHERE c.archived_at IS NULL" . academicPeriodRecordFilter('c', 'c.created_at') . "
     ORDER BY c.course_code ASC
 ");
 $catalogStmt->execute(array_merge([
     'sid' => $studentId,
     'program_student_id' => $studentId,
-], academicPeriodDateParams()));
+], academicPeriodRecordParams()));
 $catalogCourses = $catalogStmt->fetchAll();
 
 $enrolledCourseIds = array_column($enrolledCourses, 'course_id');
@@ -83,10 +83,10 @@ $announcementsStmt = $pdo->prepare("
     JOIN users u ON a.author_id = u.id
     LEFT JOIN courses c ON a.course_id = c.id
     WHERE (a.course_id IS NULL OR a.course_id IN ($inClause))
-      AND {$announcementAudienceFilter}" . academicPeriodDateFilter('a.created_at') . "
+    AND {$announcementAudienceFilter}" . academicPeriodRecordFilter('a', 'a.created_at') . "
     ORDER BY a.created_at DESC
 ");
-$announcementsStmt->execute(academicPeriodDateParams());
+$announcementsStmt->execute(academicPeriodRecordParams());
 $announcements = $announcementsStmt->fetchAll();
 $dashboardAnnouncements = $announcements;
 $dashboardAnnouncementsHref = '../announcements.php';
@@ -101,13 +101,13 @@ $assignmentStmt = $pdo->prepare("
     LEFT JOIN assignment_completions ac ON ac.assignment_id = a.id AND ac.student_id = :completion_student_id
     WHERE ac.assignment_id IS NULL
       AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
-      " . academicPeriodDateFilter('a.due_at') . "
+    " . academicPeriodRecordFilter('a', 'a.created_at') . "
     ORDER BY a.due_at ASC
 ");
 $assignmentStmt->execute(array_merge([
     'student_id' => $studentId,
     'completion_student_id' => $studentId,
-], academicPeriodDateParams()));
+], academicPeriodRecordParams()));
 $pendingAssignments = $assignmentStmt->fetchAll();
 $pendingEnrollmentTasks = array_values(array_filter(
     $myApplications,
@@ -136,7 +136,7 @@ $assignmentMetricsStmt = $pdo->prepare("
         AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
     LEFT JOIN assignment_completions ac
         ON ac.assignment_id = a.id AND ac.student_id = :completion_student_id
-    WHERE 1 = 1" . academicPeriodDateFilter('a.due_at', 'metrics') . "
+    WHERE 1 = 1" . academicPeriodRecordFilter('a', 'a.created_at', 'metrics') . "
 ");
 $assignmentMetricsStmt->execute(array_merge([
     'today_now' => $manilaNow->format('Y-m-d H:i:s'),
@@ -144,7 +144,7 @@ $assignmentMetricsStmt->execute(array_merge([
     'missed_before' => $manilaNow->format('Y-m-d H:i:s'),
     'student_id' => $studentId,
     'completion_student_id' => $studentId,
-], academicPeriodDateParams('metrics')));
+], academicPeriodRecordParams('metrics')));
 $assignmentMetrics = $assignmentMetricsStmt->fetch();
 $unreadAnnouncementsStmt = $pdo->prepare("
     SELECT COUNT(*)
@@ -170,12 +170,12 @@ $unreadAnnouncementsStmt = $pdo->prepare("
           SELECT 1
           FROM student_announcement_reads sar
           WHERE sar.announcement_id = a.id AND sar.student_id = :read_student_id
-      ) AND {$announcementAudienceFilter}" . academicPeriodDateFilter('a.created_at', 'unread') . "
+    ) AND {$announcementAudienceFilter}" . academicPeriodRecordFilter('a', 'a.created_at', 'unread') . "
 ");
 $unreadAnnouncementsStmt->execute(array_merge([
     'student_id' => $studentId,
     'read_student_id' => $studentId,
-], academicPeriodDateParams('unread')));
+], academicPeriodRecordParams('unread')));
 $unreadAnnouncementCount = (int) $unreadAnnouncementsStmt->fetchColumn();
 $studentAnnouncementCount = $unreadAnnouncementCount;
 $studentPage = 'dashboard';
@@ -199,7 +199,8 @@ require_once '../../includes/header.php';
                 <section class="student-welcome-card">
                     <div class="student-welcome-copy">
                         <h1><?= htmlspecialchars($greeting) ?>,
-                            <?= htmlspecialchars($currentUser['first_name'] ?? $_SESSION['user_name']) ?></h1>
+                            <?= htmlspecialchars($currentUser['first_name'] ?? $_SESSION['user_name']) ?>
+                        </h1>
                         <?php require '../../includes/role_identifier_summary.php'; ?>
                         <?php require '../../includes/academic_period_summary.php'; ?>
                     </div>
@@ -217,13 +218,18 @@ require_once '../../includes/header.php';
                     </div>
                     <div class="student-announcement-list">
                         <?php foreach (array_slice($announcements, 0, 1) as $announcement): ?>
-                            <a class="student-announcement-preview" href="student_announcements.php">
+                            <a class="student-announcement-preview student-announcement-bulletin"
+                                href="student_announcements.php">
                                 <span>
-                                    <strong><?= htmlspecialchars($announcement['title']) ?></strong>
                                     <small>
                                         <?= htmlspecialchars(announcementAuthorLabel($announcement['role']), ENT_QUOTES, 'UTF-8') ?>
-                                        &middot; <?= htmlspecialchars($announcement['first_name'] . ' ' . $announcement['last_name'], ENT_QUOTES, 'UTF-8') ?>
+                                        <?php if ($announcement['role'] !== 'registrar'): ?>
+                                            &middot;
+                                            <?= htmlspecialchars($announcement['first_name'] . ' ' . $announcement['last_name'], ENT_QUOTES, 'UTF-8') ?>
+                                        <?php endif; ?>
                                     </small>
+                                    <strong><?= htmlspecialchars($announcement['title'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <p><?= nl2br(htmlspecialchars($announcement['message'], ENT_QUOTES, 'UTF-8')) ?></p>
                                 </span>
                             </a>
                         <?php endforeach; ?>
@@ -323,7 +329,8 @@ require_once '../../includes/header.php';
                                         <div class="course-badge-row">
                                             <span class="course-code-tag"><?= htmlspecialchars($c['course_code']) ?></span>
                                             <?php if (!$isProgramEligible): ?>
-                                                <span class="badge" style="background:#fff0f2; color:var(--coral-dark);">Outside Degree Track</span>
+                                                <span class="badge" style="background:#fff0f2; color:var(--coral-dark);">Outside
+                                                    Degree Track</span>
                                             <?php elseif ($c['my_status'] === 'APPROVED'): ?>
                                                 <span class="badge badge-approved">Enrolled</span>
                                             <?php elseif ($c['my_status'] === 'PENDING'): ?>
@@ -436,7 +443,8 @@ require_once '../../includes/header.php';
                                                     </span>
                                                 </td>
                                                 <td style="font-size:0.8rem;">
-                                                    <?= date('M d, Y', strtotime($app['applied_at'])) ?></td>
+                                                    <?= date('M d, Y', strtotime($app['applied_at'])) ?>
+                                                </td>
                                                 <td style="font-size:0.8rem;">
                                                     <?= $app['decided_at'] ? date('M d, Y', strtotime($app['decided_at'])) : '<span class="text-muted">Awaiting decision</span>' ?>
                                                 </td>
@@ -471,7 +479,8 @@ require_once '../../includes/header.php';
                                 <?= htmlspecialchars($currentUser['first_name'] . ' ' . $currentUser['last_name']) ?>
                             </h2>
                             <p class="text-muted" style="font-size:0.875rem;">
-                                <?= htmlspecialchars($currentUser['email']) ?></p>
+                                <?= htmlspecialchars($currentUser['email']) ?>
+                            </p>
                             <div style="margin-top:1rem;">
                                 <span class="role-pill role-student">APEX Student</span>
                             </div>
@@ -479,7 +488,8 @@ require_once '../../includes/header.php';
                                 style="margin-top:1.5rem; text-align:left; font-size:0.85rem; border-top:1px solid var(--surface-border); padding-top:1rem;">
                                 <p style="margin-bottom:0.4rem;"><strong>Student ID:</strong> #<?= $studentId ?></p>
                                 <p style="margin-bottom:0.4rem;"><strong>Joined:</strong>
-                                    <?= date('F j, Y', strtotime($currentUser['created_at'])) ?></p>
+                                    <?= date('F j, Y', strtotime($currentUser['created_at'])) ?>
+                                </p>
                                 <p><strong>Status:</strong> Active Scholar</p>
                             </div>
                         </div>

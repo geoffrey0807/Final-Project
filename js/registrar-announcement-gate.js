@@ -101,7 +101,8 @@ document.addEventListener("DOMContentLoaded", () => {
           : "";
         attachment.dataset.imageAlt = nextAnnouncement.headline;
         queueStatus.textContent =
-          `${remainingCount}/${reviewedCount + remainingCount} left`;
+          `${reviewedCount + 1}/${reviewedCount + remainingCount}`;
+        button.textContent = remainingCount > 1 ? "Next" : "Okay";
         button.disabled = false;
         return;
       }

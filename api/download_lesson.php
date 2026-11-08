@@ -8,7 +8,8 @@ checkAccess(['student', 'professor'], '../auth/login.php');
 $lessonId = (int) ($_GET['id'] ?? 0);
 $userId = (int) $_SESSION['user_id'];
 $stmt = $pdo->prepare("
-    SELECT l.file_name, l.file_path, l.file_mime, l.file_size, l.professor_id, l.course_id
+        SELECT l.file_name, l.file_path, l.file_mime, l.file_size, l.professor_id, l.course_id,
+            l.academic_year, l.semester
     FROM lessons l
     WHERE l.id = :lesson_id
 ");
@@ -17,6 +18,15 @@ $stmt->execute([
 ]);
 $lesson = $stmt->fetch();
 
+if ($lesson && $lesson['academic_year'] !== $academicPeriod['academic_year']) {
+    $lesson = false;
+}
+if ($lesson && ($_SESSION['role'] ?? '') === 'student') {
+    if ($lesson['semester'] !== $academicPeriod['semester']) {
+        $lesson = false;
+    }
+}
+
 if ($lesson && ($_SESSION['role'] ?? '') === 'student') {
     if (!studentCanAccessCourse($pdo, $userId, (int) $lesson['course_id'])) {
         denyStudentCourseAccess();
@@ -24,12 +34,22 @@ if ($lesson && ($_SESSION['role'] ?? '') === 'student') {
     $enrollmentStmt = $pdo->prepare("
         SELECT 1 FROM enrollments
         WHERE student_id = :student_id AND course_id = :course_id AND status = 'APPROVED'
+          AND academic_year = :academic_year AND semester = :semester
     ");
-    $enrollmentStmt->execute(['student_id' => $userId, 'course_id' => (int) $lesson['course_id']]);
+    $enrollmentStmt->execute([
+        'student_id' => $userId,
+        'course_id' => (int) $lesson['course_id'],
+        'academic_year' => $academicPeriod['academic_year'],
+        'semester' => $academicPeriod['semester'],
+    ]);
     if (!$enrollmentStmt->fetchColumn()) {
         $lesson = false;
     }
-} elseif ($lesson && (int) $lesson['professor_id'] !== $userId) {
+} elseif (
+    $lesson
+    && ((int) $lesson['professor_id'] !== $userId
+        || $lesson['semester'] !== $academicPeriod['semester'])
+) {
     $lesson = false;
 }
 
@@ -45,7 +65,17 @@ if ($baseDirectory === false || $file === false || strncmp($file, $baseDirectory
     exit('Lesson file not found.');
 }
 
-header('Content-Type: ' . ($lesson['file_mime'] ?: 'application/octet-stream'));
+$fileMime = (string) ($lesson['file_mime'] ?: 'application/octet-stream');
+$inlinePreview = ($_GET['preview'] ?? '') === '1';
+$previewable = $fileMime === 'application/pdf' || str_starts_with($fileMime, 'image/');
+if ($inlinePreview && !$previewable) {
+    http_response_code(415);
+    exit('This attachment cannot be previewed in the browser.');
+}
+
+$safeFileName = str_replace(["\r", "\n", '"'], '', basename((string) $lesson['file_name']));
+header('X-Content-Type-Options: nosniff');
+header('Content-Type: ' . $fileMime);
 header('Content-Length: ' . (int) $lesson['file_size']);
-header('Content-Disposition: attachment; filename="' . str_replace('"', '', basename($lesson['file_name'])) . '"');
+header('Content-Disposition: ' . ($inlinePreview ? 'inline' : 'attachment') . '; filename="' . $safeFileName . '"');
 readfile($file);

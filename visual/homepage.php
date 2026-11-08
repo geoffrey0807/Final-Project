@@ -1,14 +1,14 @@
 <?php
 require_once '../config/db.php';
 $homepageBulletinsStmt = $pdo->query("
-    SELECT a.headline, a.message, a.homepage_category, a.created_at
+    SELECT a.headline, a.message, a.image_path, a.homepage_category, a.created_at, a.updated_at
     FROM announcements a
     JOIN users publisher ON publisher.id = a.author_id AND publisher.role = 'registrar'
     WHERE a.course_id IS NULL
       AND a.is_homepage_notice = 1
       AND a.homepage_category IS NOT NULL
-    ORDER BY a.created_at DESC, a.id DESC
-    LIMIT 2
+    ORDER BY COALESCE(a.updated_at, a.created_at) DESC, a.id DESC
+    LIMIT 3
 ");
 $homepageBulletins = $homepageBulletinsStmt->fetchAll(PDO::FETCH_ASSOC);
 $homepageCategoryLabels = [
@@ -17,6 +17,7 @@ $homepageCategoryLabels = [
     'event' => 'Campus Event',
     'policy' => 'Policy Notice',
 ];
+$publicAnnouncementPage = true;
 $pageTitle = 'APEX Learning Hub — Home';
 $activePage = 'home';
 $bodyClass = 'home-page';
@@ -201,26 +202,36 @@ include '_partials/head.php';
                     <div class="announcement-cards-grid home-card-carousel-track">
                         <?php foreach ($homepageBulletins as $bulletin): ?>
                             <?php
+                            $imagePath = $bulletin['image_path'];
                             $category = $bulletin['homepage_category'];
                             $categoryLabel = $homepageCategoryLabels[$category] ?? 'Bulletin';
+                            $noticeDate = $bulletin['updated_at'] ?? $bulletin['created_at'];
+                            $hasImage = is_string($imagePath)
+                                && preg_match('/\Auploads\/announcements\/[a-f0-9]{32}\.(?:jpg|png|webp)\z/', $imagePath);
                             ?>
-                            <a class="ann-card" href="announcement.php">
-                                <div>
-                                    <div class="ann-badge-row">
-                                        <span class="badge-tag badge-<?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>">
-                                            <?= htmlspecialchars($categoryLabel, ENT_QUOTES, 'UTF-8') ?>
-                                        </span>
-                                        <time class="ann-date"
-                                            datetime="<?= htmlspecialchars(date('Y-m-d', strtotime($bulletin['created_at'])), ENT_QUOTES, 'UTF-8') ?>">
-                                            <?= htmlspecialchars(date('F j, Y', strtotime($bulletin['created_at'])), ENT_QUOTES, 'UTF-8') ?>
-                                        </time>
-                                    </div>
+                            <article class="ann-card">
+                                <a class="ann-card-notice" href="announcement.php"
+                                    aria-label="Read notice: <?= htmlspecialchars($bulletin['headline'], ENT_QUOTES, 'UTF-8') ?>">
+                                    <?= htmlspecialchars($categoryLabel, ENT_QUOTES, 'UTF-8') ?>
+                                    | <?= !empty($bulletin['updated_at']) ? 'Updated ' : '' ?><?= htmlspecialchars(date('F d, Y', strtotime($noticeDate)), ENT_QUOTES, 'UTF-8') ?>
+                                    <hr class="ann-card-divider">
                                     <h3 class="ann-title"><?= htmlspecialchars($bulletin['headline'], ENT_QUOTES, 'UTF-8') ?></h3>
-                                    <p class="ann-snippet"><?= htmlspecialchars($bulletin['message'], ENT_QUOTES, 'UTF-8') ?></p>
-                                </div>
-                            </a>
+                                    <p class="ann-snippet"><?= nl2br(htmlspecialchars($bulletin['message'], ENT_QUOTES, 'UTF-8')) ?></p>
+                                    <?php if ($hasImage): ?>
+                                        <hr class="ann-card-divider">
+                                    <?php endif; ?>
+                                </a>
+                                <?php if ($hasImage): ?>
+                                    <button class="announcement-attachment-open" type="button"
+                                        data-announcement-attachment-open
+                                        data-image-src="../<?= htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') ?>"
+                                        data-image-alt="<?= htmlspecialchars($bulletin['headline'], ENT_QUOTES, 'UTF-8') ?>">
+                                        View Attachment
+                                    </button>
+                                <?php endif; ?>
+                            </article>
                         <?php endforeach; ?>
-                        <?php for ($slot = count($homepageBulletins); $slot < 2; $slot++): ?>
+                        <?php for ($slot = count($homepageBulletins); $slot < 3; $slot++): ?>
                             <article class="ann-card ann-card-placeholder">
                                 <div>
                                     <div class="ann-badge-row">
@@ -241,12 +252,6 @@ include '_partials/head.php';
                 </button>
             </div>
 
-            <div class="section-action-center">
-                <a href="announcement.php" class="btn-all-bulletins">
-                    View All Past Bulletins &amp; Archives &rarr;
-
-                </a>
-            </div>
         </div>
     </section>
 

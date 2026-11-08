@@ -13,7 +13,9 @@
   font: inherit;
   font-size: 0.88rem;
   font-weight: 600;
-  transition: background-color 140ms ease, border-color 140ms ease;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease;
 }
 
 .announcement-attachment-open:hover {
@@ -33,8 +35,9 @@
   inset: 0;
   display: grid;
   place-items: center;
-  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
-    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  padding: max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
   background: rgba(16, 20, 29, 0.88);
   animation: announcement-viewer-in 160ms ease-out both;
 }
@@ -71,9 +74,160 @@
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
 }
 
+.lesson-attachment-viewer {
+  display: block;
+}
+
+.lesson-attachment-viewer-toolbar {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  inset: max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right)) auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.lesson-attachment-viewer-zoom-controls,
+.lesson-attachment-viewer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: auto;
+}
+
+.lesson-attachment-viewer-zoom-controls[hidden] {
+  display: none;
+}
+
+.lesson-attachment-viewer-control {
+  display: inline-grid;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  padding: 0 0.65rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.15rem;
+}
+
+.lesson-attachment-viewer-control:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.lesson-attachment-viewer-zoom-controls > span {
+  min-width: 3.25rem;
+  color: #fff;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.lesson-attachment-viewer-download {
+  display: inline-grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #d98596;
+  color: #fff;
+  text-decoration: none;
+}
+
+.lesson-attachment-viewer-download svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lesson-attachment-viewer-download:hover,
+.lesson-attachment-viewer-download:focus-visible {
+  background: #c96f83;
+  color: #fff;
+}
+
+.lesson-attachment-viewer .announcement-attachment-viewer-close {
+  position: static;
+  flex: 0 0 2.75rem;
+}
+
+.lesson-attachment-viewer-media {
+  position: absolute;
+  inset: 4.5rem 1rem 1rem;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: auto;
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+.lesson-attachment-viewer-image {
+  display: block;
+  flex: 0 0 auto;
+  margin: auto;
+  max-width: none;
+  max-height: none;
+  border-radius: 0.4rem;
+  object-fit: contain;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+}
+
+.lesson-attachment-viewer-pdf {
+  width: 100%;
+  height: 100%;
+  min-height: min(78vh, 48rem);
+  border: 0;
+  border-radius: 0.4rem;
+  background: #fff;
+}
+
+.lesson-attachment-viewer-fallback {
+  max-width: 34rem;
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.65rem;
+  background: rgba(20, 24, 33, 0.92);
+  color: #fff;
+  line-height: 1.6;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .lesson-attachment-viewer-toolbar {
+    inset-inline: 0.75rem;
+  }
+
+  .lesson-attachment-viewer-actions {
+    margin-left: auto;
+  }
+}
+
 @keyframes announcement-viewer-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

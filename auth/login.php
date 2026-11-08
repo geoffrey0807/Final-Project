@@ -4,8 +4,16 @@ require_once '../config/db.php';
 require_once '../includes/email_policy.php';
 require_once '../includes/portal_toast.php';
 
+$dashboardRoutes = [
+    'admin' => '../views/admin/admin_dashboard.php',
+    'registrar' => '../views/registrar/registrar_dashboard.php',
+    'professor' => '../views/professor/professor_dashboard.php',
+    'dean' => '../views/dean/dean_dashboard.php',
+    'student' => '../views/student/student_dashboard.php',
+];
+
 if (isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
+    header('Location: ' . ($dashboardRoutes[$_SESSION['role'] ?? ''] ?? '../index.php'));
     exit;
 }
 
@@ -60,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['profile_photo'] = (string) ($user['profile_photo'] ?? '');
             setPortalToast('Login successful.');
 
-            header("Location: ../index.php");
+            header('Location: ' . ($dashboardRoutes[$user['role']] ?? '../index.php'));
             exit;
         } else {
             $error = "Invalid credentials. Please verify your email and password.";

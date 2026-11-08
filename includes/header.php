@@ -81,7 +81,7 @@ if (!empty($_SESSION['user_id'])) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
             rel="stylesheet">
-        <link rel="stylesheet" href="<?= $siteRootPath ?>visual/css/visual.css?v=202611041145">
+        <link rel="stylesheet" href="<?= $siteRootPath ?>visual/css/visual.css?v=202611050900">
     <?php endif; ?>
     <?php if (isset($extraCss)): ?>
         <?php foreach ((array) $extraCss as $stylesheet): ?>
@@ -89,14 +89,18 @@ if (!empty($_SESSION['user_id'])) {
         <?php endforeach; ?>
     <?php endif; ?>
     <?php if (!empty($useVisualTheme)): ?>
-        <link rel="stylesheet" href="<?= $siteRootPath ?>css/portal-layout.css?v=202611041910">
-        <link rel="stylesheet" href="<?= $siteRootPath ?>css/announcement-attachments.css?v=202611041633">
+        <link rel="stylesheet" href="<?= $siteRootPath ?>css/portal-layout.css?v=202611071845">
+        <link rel="stylesheet" href="<?= $siteRootPath ?>css/announcement-attachments.css?v=202611062030">
     <?php endif; ?>
     <?php if ($registrarAnnouncementGate !== null): ?>
-        <link rel="stylesheet" href="<?= htmlspecialchars($siteRootPath . 'css/registrar-announcement-gate.css?v=202611041802', ENT_QUOTES, 'UTF-8') ?>">
+        <link rel="stylesheet"
+            href="<?= htmlspecialchars($siteRootPath . 'css/registrar-announcement-gate.css?v=202611041802', ENT_QUOTES, 'UTF-8') ?>">
     <?php endif; ?>
 </head>
-<body<?= !empty($bodyClass) ? ' class="' . htmlspecialchars($bodyClass) . '"' : '' ?><?= !empty($useVisualTheme) ? ' data-visual-base="' . htmlspecialchars($siteRootPath . 'visual/') . '"' : '' ?><?= !empty($academicReadOnly) ? ' data-academic-readonly="true"' : '' ?><?= $registrarAnnouncementGate !== null ? ' data-registrar-announcement-gate="open"' : '' ?> data-academic-period="<?= htmlspecialchars($academicPeriod === null ? '' : $academicPeriod['academic_year'] . ':' . $academicPeriod['semester'], ENT_QUOTES, 'UTF-8') ?>" data-academic-period-endpoint="<?= htmlspecialchars($siteRootPath . 'api/academic_period.php', ENT_QUOTES, 'UTF-8') ?>">
+<body<?= !empty($bodyClass) ? ' class="' . htmlspecialchars($bodyClass) . '"' : '' ?><?= !empty($useVisualTheme) ? ' data-visual-base="' . htmlspecialchars($siteRootPath . 'visual/') . '"' : '' ?><?= !empty($academicReadOnly) ? ' data-academic-readonly="true"' : '' ?><?= $registrarAnnouncementGate !== null ? ' data-registrar-announcement-gate="open"' : '' ?>
+    data-academic-period-mode="<?= htmlspecialchars($_SESSION['academic_period_mode'] ?? 'global', ENT_QUOTES, 'UTF-8') ?>"
+    data-academic-period="<?= htmlspecialchars($academicPeriod === null ? '' : $academicPeriod['academic_year'] . ':' . $academicPeriod['semester'], ENT_QUOTES, 'UTF-8') ?>"
+    data-academic-period-endpoint="<?= htmlspecialchars($siteRootPath . 'api/academic_period.php', ENT_QUOTES, 'UTF-8') ?>">
     <header class="app-navbar">
         <?php if (!empty($useVisualTheme)): ?>
             <div class="navbar-brand header-logo" role="img" aria-label="APEX Learning Hub">
@@ -188,7 +192,7 @@ if (!empty($_SESSION['user_id'])) {
                 </header>
                 <div class="registrar-announcement-content">
                     <p class="registrar-announcement-queue-status" data-announcement-queue-status>
-                        <?= (int) $registrarAnnouncementGateCount ?>/<?= (int) $registrarAnnouncementGateCount ?> left
+                        1/<?= (int) $registrarAnnouncementGateCount ?>
                     </p>
                     <h1 id="registrarAnnouncementTitle">
                         <?= htmlspecialchars($registrarAnnouncementGate['headline'], ENT_QUOTES, 'UTF-8') ?>
@@ -203,8 +207,7 @@ if (!empty($_SESSION['user_id'])) {
                         ? $registrarAnnouncementGate['image_path']
                         : '';
                     ?>
-                    <button class="announcement-attachment-open" type="button"
-                        data-announcement-attachment-open
+                    <button class="announcement-attachment-open" type="button" data-announcement-attachment-open
                         data-image-src="<?= htmlspecialchars($registrarAnnouncementImagePath === '' ? '' : $siteRootPath . $registrarAnnouncementImagePath, ENT_QUOTES, 'UTF-8') ?>"
                         data-image-alt="<?= htmlspecialchars($registrarAnnouncementGate['headline'], ENT_QUOTES, 'UTF-8') ?>"
                         <?= $registrarAnnouncementImagePath === '' ? 'hidden' : '' ?>>
@@ -212,17 +215,16 @@ if (!empty($_SESSION['user_id'])) {
                     </button>
                 </div>
                 <footer class="registrar-announcement-footer">
-                    <form class="registrar-announcement-acknowledgement"
-                        data-registrar-announcement-acknowledgement
+                    <form class="registrar-announcement-acknowledgement" data-registrar-announcement-acknowledgement
                         data-endpoint="<?= htmlspecialchars($siteRootPath . 'api/registrar_announcement_acknowledge.php', ENT_QUOTES, 'UTF-8') ?>"
                         data-announcement-id="<?= (int) $registrarAnnouncementGate['id'] ?>"
                         data-csrf-token="<?= htmlspecialchars($registrarAnnouncementGateCsrf, ENT_QUOTES, 'UTF-8') ?>">
                         <p class="registrar-announcement-error" data-announcement-ack-error role="alert" hidden></p>
                         <button class="registrar-announcement-understand" type="submit"
-                            data-announcement-ack-button>I agree</button>
+                            data-announcement-ack-button><?= $registrarAnnouncementGateCount > 1 ? 'Next' : 'Okay' ?></button>
                     </form>
-                    <svg class="registrar-announcement-ornament registrar-announcement-footer-ornament"
-                        viewBox="0 0 640 32" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                    <svg class="registrar-announcement-ornament registrar-announcement-footer-ornament" viewBox="0 0 640 32"
+                        preserveAspectRatio="none" aria-hidden="true" focusable="false">
                         <path d="M13 16H294M346 16h281" />
                         <path d="M4 12c3 0 6 1 9 4-3 3-6 4-9 4m623-8c3 0 6 1 9 4-3 3-6 4-9 4" />
                         <path d="m296 16 4-3 4 3-4 3zm36 0 4-3 4 3-4 3z" />
@@ -235,4 +237,4 @@ if (!empty($_SESSION['user_id'])) {
             </section>
         </div>
     <?php endif; ?>
-    <main class="app-main"<?= $registrarAnnouncementGate !== null ? ' inert' : '' ?>>
+    <main class="app-main" <?= $registrarAnnouncementGate !== null ? ' inert' : '' ?>>

@@ -47,7 +47,7 @@ if ($role === 'student') {
     $queryParams['department_id'] = $departmentId;
 }
 
-$dateFilter = academicPeriodDateFilter('a.created_at');
+$dateFilter = academicPeriodRecordFilter('a', 'a.created_at');
 $itemsPerPage = 10;
 $announcementCountStmt = $pdo->prepare("
     SELECT COUNT(*)
@@ -56,7 +56,7 @@ $announcementCountStmt = $pdo->prepare("
     LEFT JOIN courses c ON c.id = a.course_id
     WHERE {$visibilitySql} AND {$audienceVisibilitySql}{$dateFilter}
 ");
-$announcementCountStmt->execute(array_merge($queryParams, academicPeriodDateParams()));
+$announcementCountStmt->execute(array_merge($queryParams, academicPeriodRecordParams()));
 $totalAnnouncements = (int) $announcementCountStmt->fetchColumn();
 $totalPages = max(1, (int) ceil($totalAnnouncements / $itemsPerPage));
 $requestedPage = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT);
@@ -73,7 +73,7 @@ $query = "
     LIMIT :limit OFFSET :offset
 ";
 $announcementsStmt = $pdo->prepare($query);
-$announcementParams = array_merge($queryParams, academicPeriodDateParams());
+$announcementParams = array_merge($queryParams, academicPeriodRecordParams());
 foreach ($announcementParams as $parameter => $value) {
     $announcementsStmt->bindValue(':' . $parameter, $value);
 }
@@ -155,7 +155,8 @@ require_once '../includes/header.php';
                             </time>
                         </div>
                         <hr class="student-announcement-divider">
-                        <h2 class="student-announcement-title"><?= htmlspecialchars($announcement['headline'], ENT_QUOTES, 'UTF-8') ?></h2>
+                        <h2 class="student-announcement-title">
+                            <?= htmlspecialchars($announcement['headline'], ENT_QUOTES, 'UTF-8') ?></h2>
                         <div class="student-announcement-body">
                             <?= nl2br(htmlspecialchars($announcement['message'], ENT_QUOTES, 'UTF-8')) ?>
                         </div>
@@ -164,8 +165,7 @@ require_once '../includes/header.php';
                             && preg_match('/\Auploads\/announcements\/[a-f0-9]{32}\.(?:jpg|png|webp)\z/', $announcement['image_path'])
                         ): ?>
                             <hr class="student-announcement-divider">
-                            <button class="announcement-attachment-open" type="button"
-                                data-announcement-attachment-open
+                            <button class="announcement-attachment-open" type="button" data-announcement-attachment-open
                                 data-image-src="../<?= htmlspecialchars($announcement['image_path'], ENT_QUOTES, 'UTF-8') ?>"
                                 data-image-alt="<?= htmlspecialchars($announcement['headline'], ENT_QUOTES, 'UTF-8') ?>">
                                 View Attachment
