@@ -14,8 +14,14 @@ SET @has_department_program_catalog = EXISTS (
       AND TABLE_NAME = 'programs'
       AND COLUMN_NAME = 'code'
 );
+SET @has_legacy_user_program = EXISTS (
+    SELECT 1 FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = @migration_schema
+    AND TABLE_NAME = 'users'
+    AND COLUMN_NAME = 'program'
+);
 SET @migration_sql = IF(
-    @has_department_program_catalog,
+    @has_department_program_catalog OR NOT @has_legacy_user_program,
     'DO 0',
     'INSERT INTO programs (name) VALUES (''Computer Science''), (''Information Technology'') ON DUPLICATE KEY UPDATE name = VALUES(name)'
 );
@@ -38,7 +44,7 @@ EXECUTE migration_statement;
 DEALLOCATE PREPARE migration_statement;
 
 SET @migration_sql = IF(
-    @has_department_program_catalog,
+    @has_department_program_catalog OR NOT @has_legacy_user_program,
     'DO 0',
     'INSERT INTO programs (name) SELECT DISTINCT TRIM(program) FROM users WHERE program IS NOT NULL AND TRIM(program) <> '''' ON DUPLICATE KEY UPDATE name = VALUES(name)'
 );

@@ -22,7 +22,7 @@ $coursesStmt->execute(array_merge(['student_id' => $studentId], academicPeriodRe
 $courses = $coursesStmt->fetchAll();
 
 $pageTitle = 'Assigned Classes | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611061140', '../../css/student.css?v=202611041145'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611041145'];
 $extraJs = '../../js/student.js?v=202610291930';
 $bodyClass = 'admin-dashboard student-dashboard';
 $useVisualTheme = true;

@@ -1,14 +1,14 @@
-.announcement-attachment-open {
+﻿.announcement-attachment-open {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
   min-height: 2.5rem;
   margin-top: 1rem;
   padding: 0.45rem 0.75rem;
-  border: 1px solid rgba(217, 133, 150, 0.28);
+  border: 1px solid rgba(112, 38, 59, 0.28);
   border-radius: 0.55rem;
-  background: #fff8f9;
-  color: #a84c60;
+  background: var(--red-gradient, linear-gradient(135deg, #a52d4a, #c73659, #d94f70));
+  color: #ffffff;
   cursor: pointer;
   font: inherit;
   font-size: 0.88rem;
@@ -19,13 +19,13 @@
 }
 
 .announcement-attachment-open:hover {
-  border-color: rgba(100, 116, 139, 0.42);
-  background: #f8fafc;
+  border-color: transparent;
+  background: var(--red-gradient-hover, linear-gradient(135deg, #7f2339, #a52d4a, #c73659));
 }
 
 .announcement-attachment-open:focus-visible,
 .announcement-attachment-viewer-close:focus-visible {
-  outline: 3px solid rgba(217, 133, 150, 0.42);
+  outline: 3px solid rgba(112, 38, 59, 0.42);
   outline-offset: 3px;
 }
 
@@ -38,7 +38,9 @@
   padding: max(1rem, env(safe-area-inset-top))
     max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom))
     max(1rem, env(safe-area-inset-left));
-  background: rgba(16, 20, 29, 0.88);
+  background: rgba(74, 24, 40, 0.42);
+  backdrop-filter: blur(16px) saturate(145%);
+  -webkit-backdrop-filter: blur(16px) saturate(145%);
   animation: announcement-viewer-in 160ms ease-out both;
 }
 
@@ -52,7 +54,9 @@
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 50%;
-  background: rgba(20, 24, 33, 0.7);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
   color: #fff;
   cursor: pointer;
   font: inherit;
@@ -139,7 +143,7 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: #d98596;
+  background: #c73659;
   color: #fff;
   text-decoration: none;
 }
@@ -156,7 +160,7 @@
 
 .lesson-attachment-viewer-download:hover,
 .lesson-attachment-viewer-download:focus-visible {
-  background: #c96f83;
+  background: #a52d4a;
   color: #fff;
 }
 
@@ -234,4 +238,17 @@
   .announcement-attachment-viewer {
     animation-duration: 0.01ms !important;
   }
+}
+
+.announcement-attachment-open,
+.announcement-attachment-viewer-close {
+  min-height: 44px;
+  box-sizing: border-box;
+  border-radius: 10px !important;
+}
+
+.announcement-attachment-open:hover {
+  border-color: transparent !important;
+  background: var(--red-gradient-hover, linear-gradient(135deg, #7f2339, #a52d4a, #c73659)) !important;
+  color: #ffffff !important;
 }

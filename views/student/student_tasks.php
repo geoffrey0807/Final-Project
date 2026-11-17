@@ -58,6 +58,7 @@ $assessmentsStmt = $pdo->prepare("
         ON submission.assessment_id = a.id
         AND submission.student_id = :submission_student_id
     WHERE (submission.status IS NULL OR submission.status IN ('Pending', 'Missed'))
+            AND a.is_draft = 0
       AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
       {$courseFilterSql}
     " . academicPeriodRecordFilter('a', 'a.created_at') . "
@@ -151,7 +152,7 @@ if (isset($todoAcademicParams['academic_year'], $todoAcademicParams['academic_se
 }
 
 $pageTitle = 'To-do List | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611061140', '../../css/student.css?v=202611061610'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611061610'];
 $extraJs = '../../js/student.js?v=202611041145';
 $bodyClass = 'admin-dashboard student-dashboard';
 $useVisualTheme = true;

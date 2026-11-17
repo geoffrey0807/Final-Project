@@ -1,4 +1,4 @@
-.portal-toast-region {
+﻿.portal-toast-region {
   position: fixed;
   z-index: 12000;
   left: max(1rem, env(safe-area-inset-left));
@@ -10,7 +10,7 @@
 }
 
 .portal-toast {
-  --toast-accent: #d98596;
+  --toast-accent: #c73659;
   position: relative;
   display: flex;
   align-items: center;
@@ -18,12 +18,14 @@
   min-height: 4.25rem;
   padding: 0.9rem 0.9rem 0.9rem 1rem;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.74);
   border-left: 3px solid var(--toast-accent);
-  border-radius: 0.65rem;
-  background: #252525;
-  box-shadow: 0 12px 32px rgba(20, 20, 20, 0.24);
-  color: #f7f7f7;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 14px 36px rgba(112, 38, 59, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  color: #3f2932;
   pointer-events: auto;
   animation: portal-toast-lift 260ms cubic-bezier(0.2, 0.8, 0.25, 1) both;
 }
@@ -53,8 +55,8 @@
   padding: 0 0 0.1rem;
   border: 0;
   border-radius: 50%;
-  background: #3d3d3d;
-  color: #f7f7f7;
+  background: rgba(199, 54, 89, 0.1);
+  color: #70263b;
   cursor: pointer;
   font: inherit;
   font-size: 1.2rem;
@@ -64,7 +66,7 @@
 
 .portal-toast-dismiss:hover {
   transform: scale(1.06);
-  background: #555;
+  background: rgba(199, 54, 89, 0.18);
 }
 
 .portal-toast-dismiss:focus-visible {
@@ -108,3 +110,4 @@
     animation-duration: 0.01ms !important;
   }
 }
+

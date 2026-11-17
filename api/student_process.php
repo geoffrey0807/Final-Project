@@ -234,6 +234,7 @@ try {
                   AND a.course_id = :course_id
                   AND a.academic_year = :academic_year
                   AND a.semester = :semester
+                  AND a.is_draft = 0
                   AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
                 LIMIT 1
             ");
@@ -327,6 +328,7 @@ try {
                 WHERE a.id = :assessment_id
                   AND a.academic_year = :academic_year
                   AND a.semester = :semester
+                                    AND a.is_draft = 0
                   AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
                 LIMIT 1
             ");
@@ -462,18 +464,7 @@ try {
             break;
 
         case 'update_profile':
-            $fn = trim($_POST['first_name'] ?? '');
-            $ln = trim($_POST['last_name'] ?? '');
-
-            if (empty($fn) || empty($ln)) {
-                respond(false, "First and last name cannot be empty.");
-            }
-
-            $update = $pdo->prepare("UPDATE users SET first_name = :fn, last_name = :ln WHERE id = :id");
-            $update->execute(['fn' => $fn, 'ln' => $ln, 'id' => $studentId]);
-
-            $_SESSION['user_name'] = "$fn $ln";
-            respond(true, "Profile details updated successfully.");
+            respond(false, 'Your name and APEX email are managed by campus administration.');
             break;
 
         default:

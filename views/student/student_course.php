@@ -112,6 +112,7 @@ if ($studentCourseArea === 'lessons') {
         WHERE a.course_id = :course_id
           AND a.academic_year = :academic_year
           AND a.semester = :semester{$assessmentTermFilter}
+                    AND a.is_draft = 0
         ORDER BY a.deadline ASC, a.id ASC
     ");
     $assessmentsStmt->execute($assessmentParams);
@@ -156,7 +157,7 @@ if ($studentCourseArea === 'lessons') {
         $assessmentCanTake = $activeSubmissionStatus === 'Pending'
             && strtotime((string) $effectiveDeadline) >= time();
         $questionsStmt = $pdo->prepare("
-                                 SELECT id, question_text, question_type, choices_json, points, question_order
+                                 SELECT id, question_text, image_path, question_type, choices_json, points, question_order
             FROM assessment_questions
             WHERE assessment_id = :assessment_id
             ORDER BY question_order, id
@@ -186,7 +187,7 @@ $areaTitles = [
     'announcements' => 'Announcements',
 ];
 $pageTitle = $areaTitles[$studentCourseArea] . ' | ' . $course['course_code'];
-$extraCss = ['../../css/admin.css?v=202611062700', '../../css/student.css?v=202611062500'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611062500'];
 $extraJs = ['../../js/admin.js?v=202611010115', '../../js/student.js?v=202610301930'];
 if ($studentCourseArea === 'assessments') {
     $extraCss[] = '../../css/student-assessment-focus.css?v=202611063350';
@@ -305,6 +306,11 @@ require_once '../../includes/header.php';
                                                 <?= htmlspecialchars($question['question_text'], ENT_QUOTES, 'UTF-8') ?>
                                                 <small><?= number_format((float) $question['points'], 0) ?> pts</small>
                                             </legend>
+                                            <?php if (!empty($question['image_path'])): ?>
+                                                <img class="assessment-question-context-image"
+                                                    src="../../<?= htmlspecialchars($question['image_path'], ENT_QUOTES, 'UTF-8') ?>"
+                                                    alt="Question visual context" loading="lazy" decoding="async">
+                                            <?php endif; ?>
                                             <?php if ($question['question_type'] === 'multiple_choice'):
                                                 $choiceOptions = json_decode((string) $question['choices_json'], true) ?: [];
                                                 foreach ($choiceOptions as $choice): ?>
@@ -388,10 +394,41 @@ require_once '../../includes/header.php';
             <?php elseif ($studentCourseArea === 'grades'): ?>
                 <section class="professor-course-content-box">
                     <div class="professor-course-content-header">
-                        <h2>Grades</h2>
+                        <div>
+                            <h2>My Grades</h2>
+                            <p class="student-grade-release-note">
+                                <?= $gradesReleased
+                                    ? 'Your course grades are available below.'
+                                    : 'Your instructor has not released course grades yet.' ?>
+                            </p>
+                        </div>
                     </div>
-                    <div class="professor-grade-legend">
-                        <h3>Grade Conversion Legend</h3>
+                    <div class="student-grade-overview" aria-label="Grade overview">
+                        <article class="student-grade-overview-card student-grade-overview-status">
+                            <span>Grade status</span>
+                            <strong class="grade-status-pill<?= $gradesReleased ? ' is-released' : ' is-pending' ?>">
+                                <?= $gradesReleased ? 'Released' : 'Pending' ?>
+                            </strong>
+                        </article>
+                        <article class="student-grade-overview-card">
+                            <span>Prelim contribution</span>
+                            <strong><?= !$gradesReleased || $studentTermContributions['Prelim'] === null ? '—' : number_format($studentTermContributions['Prelim'], 0) . '%' ?></strong>
+                        </article>
+                        <article class="student-grade-overview-card">
+                            <span>Midterm contribution</span>
+                            <strong><?= !$gradesReleased || $studentTermContributions['Midterm'] === null ? '—' : number_format($studentTermContributions['Midterm'], 0) . '%' ?></strong>
+                        </article>
+                        <article class="student-grade-overview-card">
+                            <span>Midterm standing</span>
+                            <strong><?= !$gradesReleased || $studentMidtermStanding === null ? '—' : number_format($studentMidtermStanding, 0) . '%' ?></strong>
+                        </article>
+                        <article class="student-grade-overview-card student-grade-overview-final">
+                            <span>Final grade</span>
+                            <strong><?= $gradesReleased && $course['final_grade'] !== null ? number_format((float) $course['final_grade'], 2) : '—' ?></strong>
+                        </article>
+                    </div>
+                    <div class="professor-grade-legend student-grade-legend">
+                        <h3>Grade conversion</h3>
                         <table>
                             <thead>
                                 <tr>
@@ -409,7 +446,10 @@ require_once '../../includes/header.php';
                             </tbody>
                         </table>
                     </div>
-                    <div class="professor-grade-table-wrap">
+                    <p class="professor-grade-table-note">
+                        Assessment scores and final results for this course. Scroll horizontally to see every column.
+                    </p>
+                    <div class="professor-grade-table-wrap student-grade-table-wrap" role="region" aria-label="My course grades" tabindex="0">
                         <table class="professor-grade-table student-grade-matrix">
                             <thead>
                                 <tr>
@@ -475,7 +515,11 @@ require_once '../../includes/header.php';
                                     <td><?= $gradesReleased && $course['final_grade'] !== null
                                         ? number_format((float) $course['final_grade'], 2)
                                         : '—' ?></td>
-                                    <td><?= $gradesReleased ? 'Released' : '—' ?></td>
+                                    <td>
+                                        <span class="grade-status-pill<?= $gradesReleased ? ' is-released' : ' is-pending' ?>">
+                                            <?= $gradesReleased ? 'Released' : 'Pending' ?>
+                                        </span>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

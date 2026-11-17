@@ -39,7 +39,7 @@ $professorsStmt->execute(array_merge(
 $professors = $professorsStmt->fetchAll();
 
 $pageTitle = 'My Professors | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611070003', '../../css/student.css?v=202610292224'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202610292224'];
 $extraJs = ['../../js/admin.js?v=202610301355', '../../js/student.js?v=202610301835'];
 $bodyClass = 'admin-dashboard student-dashboard dean-portal';
 $useVisualTheme = true;

@@ -1,4 +1,15 @@
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("[data-name-input]").forEach((input) => {
+    const removeInvalidNameCharacters = () => {
+      input.value = input.value.replace(/[^\p{L}\p{M} ]/gu, "");
+      input.setCustomValidity("");
+    };
+    input.addEventListener("input", (event) => {
+      if (!event.isComposing) removeInvalidNameCharacters();
+    });
+    input.addEventListener("compositionend", removeInvalidNameCharacters);
+  });
+
   const profileMenu = document.querySelector("[data-profile-menu]");
   const profileMenuTrigger = document.querySelector(
     "[data-profile-menu-trigger]",
@@ -108,6 +119,39 @@ document.addEventListener("DOMContentLoaded", () => {
     .forEach((backdrop) => document.body.append(backdrop));
 
   const placementForm = document.querySelector("[data-placement-form]");
+  const placementSelectAll = placementForm?.querySelector(
+    "[data-placement-select-all]",
+  );
+  const getVisiblePlacementSelections = () =>
+    Array.from(
+      placementForm?.querySelectorAll('input[name$="[selected]"]') ?? [],
+    ).filter(
+      (checkbox) =>
+        !checkbox.disabled &&
+        checkbox.closest("tr")?.getClientRects().length > 0,
+    );
+  const syncPlacementSelectAll = () => {
+    if (!placementSelectAll) return;
+    const selectable = getVisiblePlacementSelections();
+    const selectedCount = selectable.filter((checkbox) => checkbox.checked).length;
+    placementSelectAll.checked =
+      selectable.length > 0 && selectedCount === selectable.length;
+    placementSelectAll.indeterminate =
+      selectedCount > 0 && selectedCount < selectable.length;
+    placementSelectAll.disabled = selectable.length === 0;
+  };
+  placementSelectAll?.addEventListener("change", () => {
+    getVisiblePlacementSelections().forEach((checkbox) => {
+      checkbox.checked = placementSelectAll.checked;
+    });
+    syncPlacementSelectAll();
+  });
+  placementForm
+    ?.querySelectorAll('input[name$="[selected]"]')
+    .forEach((checkbox) =>
+      checkbox.addEventListener("change", syncPlacementSelectAll),
+    );
+  syncPlacementSelectAll();
   const placementConfirm = placementForm?.querySelector(
     "[data-placement-confirm]",
   );
@@ -142,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedCheckbox = row?.querySelector('input[name$="[selected]"]');
     if (selectedCheckbox instanceof HTMLInputElement) {
       selectedCheckbox.checked = true;
+      syncPlacementSelectAll();
     }
   });
 
@@ -266,11 +311,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const userDepartmentLabel = document.querySelector("[data-department-label]");
   const userProgramGroup = document.getElementById("userProgramGroup");
   const userProgramSelect = document.getElementById("user_program");
+  const userYearLevelGroup = document.getElementById("userYearLevelGroup");
+  const userYearLevelSelect = document.querySelector("[data-user-year-level]");
   const userIdNumber = document.querySelector("[data-role-id-number]");
   const userIdHint = document.querySelector("[data-role-id-hint]");
   const roleIdPrefixes = { dean: "D", professor: "EDU", student: "STU" };
   const roleIdExamples = { dean: "1001", professor: "2001", student: "3001" };
   const currentYear = new Date().getFullYear();
+  const updateUserYearLevelOptions = () => {
+    if (!userYearLevelSelect) return;
+    const isStudent = userRoleSelect?.value === "student";
+    const programOption = userProgramSelect?.selectedOptions[0];
+    const yearLimit = Number(programOption?.dataset.yearLimit || 4);
+    userYearLevelSelect.disabled = !isStudent;
+    userYearLevelSelect.required = isStudent;
+    Array.from(userYearLevelSelect.options).forEach((option) => {
+      if (option.value) option.disabled = !yearLimit || Number(option.value) > yearLimit;
+    });
+    if (!yearLimit || Number(userYearLevelSelect.value) > yearLimit) {
+      userYearLevelSelect.value = "1";
+    }
+  };
   const updateStudentCourseVisibility = () => {
     const isStudent = userRoleSelect?.value === "student";
     if (studentCourseGroup) studentCourseGroup.hidden = !isStudent;
@@ -296,6 +357,9 @@ document.addEventListener("DOMContentLoaded", () => {
       userProgramSelect.required = needsProgram;
       userProgramSelect.value = "";
     }
+    if (userYearLevelGroup) userYearLevelGroup.hidden = !needsProgram;
+    if (userYearLevelSelect) userYearLevelSelect.value = "1";
+    updateUserYearLevelOptions();
     if (userIdNumber && userIdHint) {
       const prefix = roleIdPrefixes[role];
       userIdNumber.pattern = prefix
@@ -309,6 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
         : "Select a role to see the required ID format.";
     }
   };
+  userProgramSelect?.addEventListener("change", updateUserYearLevelOptions);
   userIdNumber?.addEventListener("input", () => {
     userIdNumber.value = userIdNumber.value.toUpperCase();
   });
@@ -1151,20 +1216,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const tableId = input.getAttribute("data-table-search");
     const table = document.getElementById(tableId);
     if (!table) return;
+    const yearFilter = document.querySelector(
+      `[data-table-year-filter="${tableId}"]`,
+    );
 
-    input.addEventListener("input", () => {
+    const applyTableFilters = () => {
       const query = input.value.toLowerCase().trim();
+      const selectedYear = yearFilter?.value ?? "";
       const rows = table.querySelectorAll("tbody tr");
 
       rows.forEach((row) => {
         const text = row.textContent.toLowerCase();
-        if (text.includes(query)) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
-        }
+        const matchesSearch = text.includes(query);
+        const matchesYear =
+          selectedYear === "" ||
+          !row.hasAttribute("data-placement-year-level") ||
+          row.dataset.placementYearLevel === selectedYear;
+        row.style.display = matchesSearch && matchesYear ? "" : "none";
       });
-    });
+      if (table.id === "placementsTable") syncPlacementSelectAll();
+    };
+
+    input.addEventListener("input", applyTableFilters);
+    yearFilter?.addEventListener("change", applyTableFilters);
   });
 
   document.querySelectorAll("[data-account-filter]").forEach((filter) => {

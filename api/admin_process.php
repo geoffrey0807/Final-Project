@@ -4,6 +4,7 @@ require_once '../config/db.php';
 require_once '../includes/session_check.php';
 require_once '../includes/password_policy.php';
 require_once '../includes/email_policy.php';
+require_once '../includes/account_name_validation.php';
 require_once '../includes/portal_toast.php';
 require_once '../includes/student_progression.php';
 
@@ -893,6 +894,7 @@ try {
             $suffix = $getTextInput('suffix');
             $idNumber = strtoupper($getTextInput('id_number'));
             $programId = filter_var($_POST['program_id'] ?? null, FILTER_VALIDATE_INT);
+            $studentYearLevelInput = filter_var($_POST['year_level'] ?? null, FILTER_VALIDATE_INT);
             $departmentId = filter_var($_POST['department_id'] ?? null, FILTER_VALIDATE_INT);
             $email = $getTextInput('email');
             $password = $_POST['password'] ?? '';
@@ -912,6 +914,14 @@ try {
 
             if ($fn === '' || $ln === '' || $idNumber === '' || $email === '' || $password === '') {
                 respond(false, 'Complete all required fields to create the account.', $userPage);
+            }
+            if (
+                !isValidAccountName($fn)
+                || !isValidAccountName($ln)
+                || ($middleName !== '' && !isValidAccountName($middleName))
+                || ($suffix !== '' && !isValidAccountName($suffix))
+            ) {
+                respond(false, 'Names may contain letters and spaces only.', $userPage);
             }
             if (!in_array($role, ['dean', 'professor', 'student'], true)) {
                 respond(false, 'Choose Dean, Professor, or Student as the user role.', $userPage);
@@ -946,7 +956,7 @@ try {
             $accountDepartmentId = null;
             if ($role === 'student') {
                 $programCheck = $pdo->prepare("
-                    SELECT id, department_id
+                    SELECT id, department_id, code
                     FROM programs
                     WHERE id = :id AND is_active = 1
                       AND code IN ('BSSE', 'BSMAD', 'BSCS', 'GPMC', 'BSIT', 'ADFSWD')
@@ -956,6 +966,13 @@ try {
                 if (!$selectedProgram) {
                     respond(false, 'Choose an active degree program from the list.', $userPage);
                 }
+                if (
+                    $studentYearLevelInput === false
+                    || !isValidStudentYearLevel((string) $selectedProgram['code'], (int) $studentYearLevelInput)
+                ) {
+                    respond(false, 'Choose a valid year level for the selected degree program.', $userPage);
+                }
+                $studentYearLevel = (int) $studentYearLevelInput;
                 $accountDepartmentId = (int) $selectedProgram['department_id'];
             } else {
                 $departmentCheck = $pdo->prepare("
@@ -967,6 +984,7 @@ try {
                     respond(false, 'Choose an active department from the list.', $userPage);
                 }
                 $accountDepartmentId = (int) $departmentId;
+                $studentYearLevel = null;
             }
 
             $duplicate = $pdo->prepare('SELECT id FROM users WHERE email = :email OR id_number = :id_number LIMIT 1');
@@ -991,7 +1009,7 @@ try {
                     'id_number' => $idNumber,
                     'program_id' => $role === 'student' ? $programId : null,
                     'department_id' => $accountDepartmentId,
-                    'year_level' => $role === 'student' ? 1 : null,
+                    'year_level' => $studentYearLevel,
                     'cohort_section' => null,
                     'email' => $email,
                     'password' => password_hash($password, PASSWORD_BCRYPT),
@@ -1004,13 +1022,15 @@ try {
                         INSERT INTO student_academic_placements
                             (student_id, academic_year, semester, program_id, year_level, progression_status, assigned_by)
                         VALUES
-                            (:student_id, :academic_year, :semester, :program_id, 1, 'new', :assigned_by)
+                            (:student_id, :academic_year, :semester, :program_id, :year_level, :progression_status, :assigned_by)
                     ");
                     $initialPlacementStmt->execute([
                         'student_id' => $createdUserId,
                         'academic_year' => $academicPeriod['academic_year'],
                         'semester' => $academicPeriod['semester'],
                         'program_id' => $programId,
+                        'year_level' => $studentYearLevel,
+                        'progression_status' => $studentYearLevel === 1 ? 'new' : 'initial',
                         'assigned_by' => (int) $_SESSION['user_id'],
                     ]);
                 }
@@ -1026,6 +1046,7 @@ try {
                 respond(false, 'The account could not be saved. Please try again.', $userPage);
             }
 
+            $userPage .= '?role=' . rawurlencode($role) . '#user-' . $createdUserId;
             respond(true, ucfirst($role) . ' account created successfully.', $userPage);
             break;
 

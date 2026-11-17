@@ -45,6 +45,17 @@ require __DIR__ . '/portal_icon_rail.php';
                     </svg></span>
                 <span class="student-nav-label">Announcements</span>
             </a>
+            <button type="button" class="student-sidebar-link student-fiscal-year-trigger" data-fiscal-year-open
+                aria-haspopup="dialog" aria-controls="studentFiscalYearDialog">
+                <span class="student-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="17" rx="2" />
+                        <path d="M16 2v4M8 2v4M3 9h18M8 13h3M13 13h3M8 17h3" />
+                    </svg></span>
+                <span class="student-nav-label student-fiscal-year-copy">
+                    <span>Academic Year</span>
+                    <small class="student-fiscal-year-summary" data-fiscal-year-summary>Not set</small>
+                </span>
+            </button>
         <?php else: ?>
             <a class="student-sidebar-link<?= $studentPage === 'dashboard' ? ' active' : '' ?>"
                 href="<?= htmlspecialchars($portalViewBase . 'student_dashboard.php', ENT_QUOTES, 'UTF-8') ?>">
@@ -109,36 +120,6 @@ require __DIR__ . '/portal_icon_rail.php';
         <?php endif; ?>
     </nav>
 </aside>
-<dialog class="student-fiscal-year-dialog" id="studentFiscalYearDialog" aria-labelledby="studentFiscalYearTitle">
-    <form id="studentFiscalYearForm">
-        <div class="student-fiscal-year-heading">
-            <span class="student-eyebrow">Student portal</span>
-            <button type="button" class="student-fiscal-year-close" data-fiscal-year-close
-                aria-label="Close dialog">&times;</button>
-        </div>
-        <h2 id="studentFiscalYearTitle">Set an academic year</h2>
-        <p>Choose the academic year and semester you want to view.</p>
-        <label for="studentAcademicYear">Academic year</label>
-        <select id="studentAcademicYear" name="academicYear" required>
-            <option value="">Select an academic year</option>
-            <?php foreach (academicYearStartOptions() as $year): ?>
-                <option value="<?= $year ?>-<?= $year + 1 ?>">AY <?= $year ?>–<?= $year + 1 ?></option>
-            <?php endforeach; ?>
-        </select>
-        <label for="studentSemester">Semester</label>
-        <select id="studentSemester" name="semester" required>
-            <option value="">Select a semester</option>
-            <option value="first">First Semester</option>
-            <option value="second">Second Semester</option>
-        </select>
-        <p class="student-fiscal-year-status" id="studentFiscalYearStatus" aria-live="polite"></p>
-        <div class="student-fiscal-year-actions">
-            <button type="button" class="btn btn-outline" data-academic-clear>Current period</button>
-            <button type="button" class="btn btn-outline" data-fiscal-year-close>Cancel</button>
-            <button type="submit" class="btn btn-primary">Save selection</button>
-        </div>
-    </form>
-</dialog>
 <button type="button" class="student-sidebar-backdrop" aria-label="Close student navigation"></button>
 <button type="button" class="student-mobile-toggle" aria-label="Open student navigation" aria-controls="studentSidebar"
     aria-expanded="false">

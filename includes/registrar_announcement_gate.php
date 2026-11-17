@@ -10,7 +10,11 @@ function pendingRegistrarAnnouncements(PDO $pdo, string $role, int $userId): arr
         SELECT a.id, a.headline, a.message, a.image_path, a.created_at
         FROM announcements a
         JOIN users author ON author.id = a.author_id AND author.role = 'registrar'
-            JOIN users recipient ON recipient.id = ?
+                JOIN academic_periods active_period
+                    ON active_period.status = 'open'
+                 AND active_period.academic_year = a.academic_year
+                 AND active_period.semester = a.semester
+                JOIN users recipient ON recipient.id = ?
         LEFT JOIN registrar_announcement_acknowledgements acknowledged
           ON acknowledged.announcement_id = a.id
          AND acknowledged.user_id = ?

@@ -64,7 +64,7 @@ $gradeStudents = [];
 $submissionsByStudent = [];
 $assessmentSql = "
         SELECT a.id, a.title, a.description, a.term, a.assessment_type,
-            a.question_format, a.total_points, a.deadline, a.time_limit_minutes,
+            a.question_format, a.total_points, a.deadline, a.time_limit_minutes, a.is_draft,
            COUNT(q.id) AS question_count
     FROM assessments a
     LEFT JOIN assessment_questions q ON q.assessment_id = a.id
@@ -194,10 +194,10 @@ $courseAreaTitles = [
     'announcements' => 'Announcements',
 ];
 $pageTitle = $courseAreaTitles[$currentArea] . ' | ' . $course['course_code'];
-$extraCss = ['../../css/admin.css?v=202611063230', '../../css/student.css?v=202611061730'];
+$extraCss = ['../../css/admin.css?v=202611101741', '../../css/student.css?v=202611061730'];
 $extraJs = ['../../js/admin.js?v=202611010115', '../../js/student.js?v=202610301825'];
 if (in_array($currentArea, ['assessments', 'grades'], true)) {
-    $extraJs[] = '../../js/professor-assessment-builder.js?v=202611070001';
+    $extraJs[] = '../../js/professor-assessment-builder.js?v=202611101735';
 }
 $bodyClass = 'admin-dashboard student-dashboard professor-portal professor-course-page';
 $useVisualTheme = true;
@@ -236,7 +236,7 @@ require_once '../../includes/header.php';
                                     <?php endforeach; ?>
                                 </select>
                             </form>
-                            <button type="button" class="professor-course-action-button"
+                            <button type="button" class="professor-course-action-button professor-upload-button"
                                 data-open-modal="courseLessonModal">
                                 + Upload Lesson
                             </button>
@@ -291,7 +291,7 @@ require_once '../../includes/header.php';
                                     <?php endforeach; ?>
                                 </select>
                             </form>
-                            <button type="button" class="professor-course-action-button"
+                            <button type="button" class="professor-course-action-button professor-upload-button"
                                 data-open-modal="courseAssessmentModal">+ Upload Assessments</button>
                         </div>
                     </div>
@@ -305,10 +305,14 @@ require_once '../../includes/header.php';
                                     (string) $assessment['deadline'],
                                     new DateTimeZone('Asia/Manila')
                                 ) <= new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'));
+                                $assessmentIsDraft = !empty($assessment['is_draft']);
                                 ?>
                                 <article class="professor-assessment-card" id="assessment-<?= (int) $assessment['id'] ?>">
                                     <div>
                                         <h3><?= htmlspecialchars($assessment['title'], ENT_QUOTES, 'UTF-8') ?></h3>
+                                        <?php if ($assessmentIsDraft): ?>
+                                            <span class="professor-assessment-draft-badge">Draft · not visible to students</span>
+                                        <?php endif; ?>
                                         <p><?= number_format((float) $assessment['total_points'], 0) ?> pts
                                             · DEADLINE:
                                             <?= htmlspecialchars(date('m/d/y g:i A', strtotime($assessment['deadline'])), ENT_QUOTES, 'UTF-8') ?>
@@ -320,9 +324,9 @@ require_once '../../includes/header.php';
                                     </div>
                                     <div class="professor-assessment-actions">
                                         <?php $reopenableStudents = $reopenableStudentsByAssessment[(int) $assessment['id']] ?? []; ?>
-                                        <?php if ($reopenableStudents): ?>
+                                        <?php if (!$assessmentIsDraft && $reopenableStudents): ?>
                                             <div class="professor-assessment-reopen">
-                                                <button class="professor-assessment-action-button" type="button"
+                                                <button class="professor-assessment-action-button professor-submission-reopen-button" type="button"
                                                     data-assessment-reopen-trigger>Reopen</button>
                                                 <div class="professor-assessment-reopen-panel" hidden data-assessment-reopen-panel>
                                                     <form action="../../api/professor_process.php" method="POST">
@@ -353,11 +357,13 @@ require_once '../../includes/header.php';
                                                 </div>
                                             </div>
                                         <?php endif; ?>
-                                        <a class="professor-assessment-view-link"
-                                            href="professor_assessment.php?course_id=<?= (int) $courseId ?>&amp;assessment_id=<?= (int) $assessment['id'] ?>&amp;mode=view">View</a>
-                                        <?php if ($assessmentDeadlinePassed): ?>
+                                        <?php if (!$assessmentIsDraft): ?>
                                             <a class="professor-assessment-view-link"
-                                                href="professor_assessment.php?course_id=<?= (int) $courseId ?>&amp;assessment_id=<?= (int) $assessment['id'] ?>&amp;mode=edit">Edit</a>
+                                                href="professor_assessment.php?course_id=<?= (int) $courseId ?>&amp;assessment_id=<?= (int) $assessment['id'] ?>&amp;mode=view">View</a>
+                                        <?php endif; ?>
+                                        <?php if ($assessmentIsDraft || $assessmentDeadlinePassed): ?>
+                                            <a class="professor-assessment-view-link"
+                                                href="professor_assessment.php?course_id=<?= (int) $courseId ?>&amp;assessment_id=<?= (int) $assessment['id'] ?>&amp;mode=edit"><?= $assessmentIsDraft ? 'Continue Draft' : 'Edit' ?></a>
                                         <?php endif; ?>
                                     </div>
                                 </article>
@@ -386,13 +392,13 @@ require_once '../../includes/header.php';
                                 data-grade-confirm-message="Release grades to all approved students in this course?">
                                 <input type="hidden" name="action" value="release_course_grades">
                                 <input type="hidden" name="course_id" value="<?= (int) $courseId ?>">
-                                <button type="submit" class="professor-course-action-button">Release Grades</button>
+                                <button type="submit" class="professor-course-action-button professor-grade-release-button">Release Grades</button>
                             </form>
                             <form action="../../api/professor_process.php" method="POST" data-grade-confirm-form
                                 data-grade-confirm-message="Unrelease grades from all approved students in this course?">
                                 <input type="hidden" name="action" value="unrelease_course_grades">
                                 <input type="hidden" name="course_id" value="<?= (int) $courseId ?>">
-                                <button type="submit" class="professor-course-action-button">Unrelease Grades</button>
+                                <button type="submit" class="professor-course-action-button professor-grade-unrelease-button">Unrelease Grades</button>
                             </form>
                         </div>
                     </div>
@@ -425,7 +431,10 @@ require_once '../../includes/header.php';
                             </tbody>
                         </table>
                     </div>
-                    <div class="professor-grade-table-wrap">
+                    <p class="professor-grade-table-note">
+                        Review each assessment score, weighted contribution, and final grade. Scroll horizontally to see every column.
+                    </p>
+                    <div class="professor-grade-table-wrap" role="region" aria-label="Course gradebook" tabindex="0">
                         <table class="professor-grade-table">
                             <thead>
                                 <tr>
@@ -536,10 +545,14 @@ require_once '../../includes/header.php';
                                                     maxlength="5" title="Enter a grade from the conversion legend."
                                                     value="<?= $student['final_grade'] !== null ? htmlspecialchars(number_format((float) $student['final_grade'], 2, '.', ''), ENT_QUOTES, 'UTF-8') : '' ?>"
                                                     aria-label="Final grade from the conversion scale" required>
-                                                <button type="submit" class="professor-grade-reopen">Save</button>
+                                                <button type="submit" class="professor-grade-reopen professor-final-grade-save">Save</button>
                                             </form>
                                         </td>
-                                        <td><?= $student['grade_released_at'] !== null ? 'Released' : 'Pending' ?></td>
+                                        <td>
+                                            <span class="grade-status-pill<?= $student['grade_released_at'] !== null ? ' is-released' : ' is-pending' ?>">
+                                                <?= $student['grade_released_at'] !== null ? 'Released' : 'Pending' ?>
+                                            </span>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -583,8 +596,8 @@ require_once '../../includes/header.php';
                             data-no-sort>
                             <thead>
                                 <tr>
-                                    <th class="registrar-announcement-select-heading"><span class="sr-only">Select</span>
-                                    </th>
+                                    <th scope="col" aria-label="Announcement selection"
+                                        class="registrar-announcement-select-heading"></th>
                                     <th scope="col">Headline</th>
                                     <th scope="col">Date Uploaded</th>
                                     <th scope="col">Attachment</th>
@@ -733,7 +746,8 @@ require_once '../../includes/header.php';
     <div class="modal-backdrop" id="courseAssessmentModal">
         <div class="modal-dialog course-assessment-dialog" role="dialog" aria-modal="true"
             aria-labelledby="courseAssessmentModalTitle">
-            <form action="../../api/professor_process.php" method="POST" id="courseAssessmentForm">
+            <form action="../../api/professor_process.php" method="POST" enctype="multipart/form-data"
+                id="courseAssessmentForm">
                 <input type="hidden" name="action" value="create_assessment">
                 <input type="hidden" name="course_id" value="<?= (int) $courseId ?>">
                 <div class="modal-header">
@@ -797,11 +811,13 @@ require_once '../../includes/header.php';
                     <section class="course-assessment-question-builder" aria-labelledby="courseAssessmentQuestionsTitle">
                         <div class="course-assessment-question-builder-header">
                             <h3 id="courseAssessmentQuestionsTitle">Questions</h3>
+                        </div>
+                        <div class="course-assessment-question-list" data-assessment-question-list></div>
+                        <div class="course-assessment-question-builder-actions">
                             <button type="button" class="btn btn-outline btn-sm" data-assessment-add-question>
                                 + Add Question
                             </button>
                         </div>
-                        <div class="course-assessment-question-list" data-assessment-question-list></div>
                     </section>
                 </div>
                 <div class="modal-footer">
@@ -836,6 +852,12 @@ require_once '../../includes/header.php';
                 <label>Question / Problem Statement</label>
                 <textarea class="form-control" name="questions[__INDEX__][question_text]" rows="2" maxlength="10000"
                     required></textarea>
+            </div>
+            <div class="form-group course-assessment-image-field">
+                <label>Question image (optional)</label>
+                <input type="file" class="form-control" name="question_images[__INDEX__]"
+                    accept="image/jpeg,image/png,image/webp">
+                <small>JPG, PNG, or WebP. Maximum 5 MB.</small>
             </div>
             <div class="course-assessment-question-mode" data-multiple-choice-fields>
                 <fieldset class="course-assessment-choices">

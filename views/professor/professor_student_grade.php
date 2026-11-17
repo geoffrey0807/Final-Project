@@ -55,6 +55,7 @@ $assessmentsStmt = $pdo->prepare("
     WHERE course_id = :course_id
       AND academic_year = :academic_year
       AND semester = :semester
+            AND is_draft = 0
     ORDER BY FIELD(term, 'Prelim', 'Midterm', 'Final'), deadline, id
 ");
 $assessmentsStmt->execute([
@@ -78,7 +79,7 @@ $assessmentIds = array_map(static fn(array $assessment): int => (int) $assessmen
 $questionsByAssessment = [];
 if ($assessmentIds) {
     $questionsStmt = $pdo->prepare("
-        SELECT q.id, q.assessment_id, q.question_text, q.question_type,
+        SELECT q.id, q.assessment_id, q.question_text, q.image_path, q.question_type,
              q.choices_json, q.correct_answer,
                q.points, q.question_order
         FROM assessment_questions q
@@ -148,7 +149,7 @@ $hasReviewableSubmission = $reviewSubmission
     && !empty($reviewSubmission['answer_records']);
 
 $pageTitle = htmlspecialchars($reviewAssessment['title'], ENT_QUOTES, 'UTF-8') . ' | ' . $student['first_name'];
-$extraCss = ['../../css/admin.css?v=202611063140', '../../css/student.css?v=202611061730'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611061730'];
 $bodyClass = 'admin-dashboard student-dashboard professor-portal professor-course-page';
 $useVisualTheme = true;
 $professorView = 'classes';
@@ -246,6 +247,11 @@ require_once '../../includes/header.php';
                                                             <small><?= number_format((float) $question['points'], 0) ?> pts</small>
                                                         </h4>
                                                         <p><?= nl2br(htmlspecialchars($question['question_text'], ENT_QUOTES, 'UTF-8')) ?></p>
+                                                        <?php if (!empty($question['image_path'])): ?>
+                                                            <img class="assessment-question-context-image"
+                                                                src="../../<?= htmlspecialchars($question['image_path'], ENT_QUOTES, 'UTF-8') ?>"
+                                                                alt="Question visual context" loading="lazy" decoding="async">
+                                                        <?php endif; ?>
                                                         <div class="professor-student-grade-answer">
                                                             <strong>Student answer:</strong>
                                                             <span><?= htmlspecialchars($studentAnswer, ENT_QUOTES, 'UTF-8') ?></span>

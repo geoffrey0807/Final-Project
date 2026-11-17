@@ -7,8 +7,8 @@ require_once '../../includes/dashboard_greeting.php';
 require_once '../../includes/announcement_access.php';
 
 $pageTitle = 'Admin Dashboard | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611052430', '../../css/student.css?v=202611020900'];
-$extraJs = ['../../js/admin.js?v=202610292245', '../../js/student.js?v=202610301835'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611020900'];
+$extraJs = ['../../js/admin.js?v=202611111525', '../../js/student.js?v=202610301835'];
 $bodyClass = 'admin-dashboard student-dashboard admin-portal';
 $useVisualTheme = true;
 $hideSharedSearch = true;
@@ -82,8 +82,8 @@ require_once '../../includes/header.php';
                     <article class="metric-card">
                         <div class="metric-icon teal" aria-hidden="true">
                             <svg viewBox="0 0 24 24">
-                                <path
-                                    d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6M23 11h-6" />
+                                <circle cx="9" cy="8" r="3" />
+                                <path d="M3 20v-1a6 6 0 0 1 12 0v1M17 8h5M19.5 5.5v5" />
                             </svg>
                         </div>
                         <div class="metric-data">
@@ -95,7 +95,9 @@ require_once '../../includes/header.php';
                         <div class="metric-icon coral" aria-hidden="true">
                             <svg viewBox="0 0 24 24">
                                 <circle cx="9" cy="8" r="3" />
-                                <path d="M3 20v-1a6 6 0 0 1 12 0v1M17 8h4M19 6v4" />
+                                <path d="M3 20v-1a6 6 0 0 1 12 0v1" />
+                                <circle cx="18" cy="17" r="4.25" />
+                                <path d="m15 20 6-6" />
                             </svg>
                         </div>
                         <div class="metric-data">

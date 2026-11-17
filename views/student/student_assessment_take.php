@@ -31,6 +31,7 @@ $assessmentStmt = $pdo->prepare("
       AND a.course_id = :course_id
       AND a.academic_year = :academic_year
       AND a.semester = :semester
+    AND a.is_draft = 0
       AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
     LIMIT 1
 ");
@@ -150,7 +151,7 @@ $timerRemainingSeconds = $canTakeAssessment && $attemptDeadline !== null
     : null;
 
 $questionsStmt = $pdo->prepare("
-    SELECT id, question_text, question_type, choices_json, points, question_order
+    SELECT id, question_text, image_path, question_type, choices_json, points, question_order
     FROM assessment_questions
     WHERE assessment_id = :assessment_id
     ORDER BY question_order, id
@@ -230,6 +231,11 @@ require_once '../../includes/header.php';
                             </h3>
                             <small><?= number_format((float) $question['points'], 0) ?> pts</small>
                         </div>
+                        <?php if (!empty($question['image_path'])): ?>
+                            <img class="assessment-question-context-image"
+                                src="../../<?= htmlspecialchars($question['image_path'], ENT_QUOTES, 'UTF-8') ?>"
+                                alt="Visual context for question <?= $questionIndex + 1 ?>" loading="lazy" decoding="async">
+                        <?php endif; ?>
                         <?php if ($question['question_type'] === 'multiple_choice'):
                             $choiceOptions = json_decode((string) $question['choices_json'], true) ?: [];
                             foreach ($choiceOptions as $choice): ?>

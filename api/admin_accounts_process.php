@@ -3,6 +3,7 @@ require_once '../config/db.php';
 require_once '../includes/session_check.php';
 require_once '../includes/password_policy.php';
 require_once '../includes/email_policy.php';
+require_once '../includes/account_name_validation.php';
 require_once '../includes/admin_account_helpers.php';
 require_once '../includes/portal_toast.php';
 
@@ -74,6 +75,14 @@ try {
 
         if ($firstName === '' || $lastName === '' || $idNumber === '' || $email === '' || $password === '') {
             adminAccountRedirect(false, 'Complete all required fields to create the registrar account.', $registrarDestination);
+        }
+        if (
+            !isValidAccountName($firstName)
+            || !isValidAccountName($lastName)
+            || ($middleName !== '' && !isValidAccountName($middleName))
+            || ($suffix !== '' && !isValidAccountName($suffix))
+        ) {
+            adminAccountRedirect(false, 'Names may contain letters and spaces only.', $registrarDestination);
         }
         if (mb_strlen($firstName, 'UTF-8') > 50 || mb_strlen($lastName, 'UTF-8') > 50
             || mb_strlen($middleName, 'UTF-8') > 50 || mb_strlen($suffix, 'UTF-8') > 20

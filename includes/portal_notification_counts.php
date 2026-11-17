@@ -141,6 +141,7 @@ function portalNotificationCounts(PDO $pdo, int $userId, string $role): array
                 ON submission.assessment_id = a.id
                 AND submission.student_id = e.student_id
             WHERE (submission.status IS NULL OR submission.status IN ('Pending', 'Missed'))
+                            AND a.is_draft = 0
                             {$assessmentTodoReadFilter}
               AND " . studentEnrollmentCourseScopeSql('c', 'e') . "
             " . academicPeriodRecordFilter('a', 'a.created_at') . "

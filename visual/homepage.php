@@ -35,13 +35,12 @@ include '_partials/head.php';
 
         <div class="hero-content">
             <h1 class="hero-title">
-                Learn<br>Advance<br>Achieve
+                Code Your Future,<br>Build Careers<br>
 
             </h1>
 
             <p class="hero-desc">
-                Welcome to APEX, institution that supports students, faculty, and
-                    administrators with simple, effective digital learning site.
+                Welcome to APEX, where students, faculty, and administrators connect on one platform built for programming education, from first line of code to final deployment.
 
             </p>
 
@@ -62,7 +61,7 @@ include '_partials/head.php';
     </section>
 
     <!-- =============================================================
-         2. WHAT WE OFFER (Picture Containers with Hover-Up & Border Highlight)
+         2. APEX DEPARTMENTS
          ============================================================= -->
     <section class="section" id="offerings">
         <div class="container">
@@ -71,9 +70,9 @@ include '_partials/head.php';
 
             </div>
 
-            <div class="media-carousel" role="region" aria-label="What APEX Learning Hub Offers">
+            <div class="media-carousel" role="region" aria-label="APEX Learning Hub departments">
                 <button class="media-carousel-arrow" type="button" data-direction="previous"
-                    aria-label="Previous offering">
+                    aria-label="Previous department">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
                         stroke-linejoin="round" aria-hidden="true">
                         <path d="m15 18-6-6 6-6"></path>
@@ -81,96 +80,68 @@ include '_partials/head.php';
                 </button>
                 <div class="media-carousel-viewport">
                     <div class="media-grid">
-                        <!-- Card 1 -->
                         <article class="media-card" tabindex="0">
                             <div class="media-pic-wrap">
-                                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=700&q=80"
-                                    alt="Students studying with digital resources" loading="lazy">
+                                <img src="assets/departments/software-engineering.png"
+                                    alt="Software engineer working with AI development tools" loading="lazy">
                                 <div class="media-pic-overlay"></div>
-                                <span class="media-tag-badge">Curriculum</span>
+                                <span class="media-tag-badge">DSEAD</span>
                             </div>
                             <div class="media-card-body">
-                                <h3 class="media-card-title">
-                                    Comprehensive Digital Library
-
-                                </h3>
-                                <p class="media-card-desc">
-                                    Browse course offerings, review course details, and find syllabi,
-                                        lecture presentations, lab exercises, and reference materials shared by faculty.
-                                        Everything is organized for quick reference on desktop or mobile.
-
-                                </p>
+                                <h3 class="media-card-title">Department of Software Engineering &amp; Application Development</h3>
+                                <p class="media-card-desc">Build practical software solutions through application development, engineering methods, and mobile technologies.</p>
+                                <div class="media-card-programs">
+                                    <span>Programs</span>
+                                    <ul>
+                                        <li>BS in Software Engineering</li>
+                                        <li>BS in Mobile Application Development</li>
+                                    </ul>
+                                </div>
                             </div>
                         </article>
 
-                        <!-- Card 2 -->
                         <article class="media-card" tabindex="0">
                             <div class="media-pic-wrap">
-                                <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=700&q=80"
-                                    alt="Interactive modern software interface" loading="lazy">
+                                <img src="assets/departments/computer-science.png"
+                                    alt="Computer science workstation displaying code and artificial intelligence" loading="lazy">
                                 <div class="media-pic-overlay"></div>
-                                <span class="media-tag-badge">Coursework</span>
+                                <span class="media-tag-badge">DSCS</span>
                             </div>
                             <div class="media-card-body">
-                                <h3 class="media-card-title">
-                                    Interactive Coursework Tracker
-
-                                </h3>
-                                <p class="media-card-desc">
-                                    Keep approved courses, pending applications, and the course
-                                        catalog in one place. Check assigned instructors, application updates, and
-                                        course capacity as you plan your semester.
-
-                                </p>
+                                <h3 class="media-card-title">Department of Computer Science</h3>
+                                <p class="media-card-desc">Explore computing theory, intelligent systems, and creative digital technologies through hands-on learning.</p>
+                                <div class="media-card-programs">
+                                    <span>Programs</span>
+                                    <ul>
+                                        <li>BS in Computer Science</li>
+                                        <li>BS in Game Programming / Multimedia Computing</li>
+                                    </ul>
+                                </div>
                             </div>
                         </article>
 
-                        <!-- Card 3 -->
                         <article class="media-card" tabindex="0">
                             <div class="media-pic-wrap">
-                                <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=700&q=80"
-                                    alt="Examinations and university notices" loading="lazy">
+                                <img src="assets/departments/information-systems.png"
+                                    alt="Information systems specialist working with AI-enabled computer systems" loading="lazy">
                                 <div class="media-pic-overlay"></div>
-                                <span class="media-tag-badge">Bulletins</span>
+                                <span class="media-tag-badge">DISWT</span>
                             </div>
                             <div class="media-card-body">
-                                <h3 class="media-card-title">
-                                    Institutional Bulletins &amp; Alerts
-
-                                </h3>
-                                <p class="media-card-desc">
-                                    Find campus-wide notices and course-specific updates, including
-                                        schedules, deadlines, and maintenance advisories. Each post includes its
-                                        publishing details and relevant course context.
-
-                                </p>
-                            </div>
-                        </article>
-
-                        <!-- Card 4 -->
-                        <article class="media-card" tabindex="0">
-                            <div class="media-pic-wrap">
-                                <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=700&q=80"
-                                    alt="Professor mentorship and classroom discussion" loading="lazy">
-                                <div class="media-pic-overlay"></div>
-                                <span class="media-tag-badge">Faculty</span>
-                            </div>
-                            <div class="media-card-body">
-                                <h3 class="media-card-title">
-                                    Faculty Mentorship &amp; Evaluation
-
-                                </h3>
-                                <p class="media-card-desc">
-                                    See which faculty members are assigned to each course and follow
-                                        enrollment requests through review. Course-level announcements help keep
-                                        important learning updates connected to the right class.
-
-                                </p>
+                                <h3 class="media-card-title">Department of Information Systems &amp; Web Technologies</h3>
+                                <p class="media-card-desc">Connect business needs with digital solutions through information systems, web development, and full-stack practice.</p>
+                                <div class="media-card-programs">
+                                    <span>Programs</span>
+                                    <ul>
+                                        <li>BS in Information Systems</li>
+                                        <li>Associate Degree in Full-Stack Web Development</li>
+                                    </ul>
+                                </div>
                             </div>
                         </article>
                     </div>
                 </div>
-                <button class="media-carousel-arrow" type="button" data-direction="next" aria-label="Next offering">
+                <button class="media-carousel-arrow" type="button" data-direction="next" aria-label="Next department">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
                         stroke-linejoin="round" aria-hidden="true">
                         <path d="m9 18 6-6-6-6"></path>

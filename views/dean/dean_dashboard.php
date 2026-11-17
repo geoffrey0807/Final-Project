@@ -7,7 +7,7 @@ require_once '../../includes/academic_access.php';
 require_once '../../includes/announcement_access.php';
 
 $pageTitle = 'Dean Dashboard | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611052030', '../../css/student.css?v=202611020900'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611020900'];
 $extraJs = ['../../js/admin.js?v=202610301355', '../../js/student.js?v=202610301835'];
 $bodyClass = 'admin-dashboard student-dashboard dean-portal';
 $useVisualTheme = true;

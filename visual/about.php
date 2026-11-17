@@ -21,13 +21,9 @@ include '_partials/head.php';
 
 
                     <p>
-                        The Academy for Programming Excellence (APEX) is a physical school committed to supporting
-                        students in their academic growth. APEX Learning Hub is the school's online learning platform,
-                        created to make key academic information and resources easier for students to access wherever
-                        they are. Through the Hub, students can review courses and schedules, keep track of learning
-                        tasks, and find important announcements in one convenient place. It complements the school's
-                        in-person learning environment by helping students stay informed and connected beyond the
-                        classroom.
+                        The Academy for Programming Excellence (APEX) is dedicated to developing the next generation of skilled programmers and supporting every student’s academic and professional growth. The APEX Learning Hub is the Academy’s online learning platform, designed to give students seamless access to the information and resources they need to succeed in their programming studies, anytime and anywhere.
+
+                        Through the Hub, students can browse course offerings and class schedules, monitor assignments and project deadlines, and stay current with official school announcements, all in one centralized location. Built to complement APEX’s hands-on, in-person instruction, the Learning Hub keeps students informed, organized, and connected to their learning community well beyond the classroom.
                     </p>
 
                 </div>

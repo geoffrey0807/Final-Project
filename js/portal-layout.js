@@ -1,4 +1,62 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const confirmDialog = document.getElementById("apexConfirmDialog");
+  const confirmMessage = document.getElementById("apexConfirmMessage");
+  let pendingConfirmation = null;
+  const openConfirmation = (message, action) => {
+    if (!confirmDialog || !confirmMessage) return false;
+    pendingConfirmation = action;
+    confirmMessage.textContent = message;
+    confirmDialog.showModal();
+    return true;
+  };
+  document
+    .querySelectorAll("form[data-confirm-message], form [data-confirm-message]")
+    .forEach((target) => {
+      const form = target instanceof HTMLFormElement ? target : target.form;
+      if (!form) return;
+      form.addEventListener("submit", (event) => {
+        const submitter = event.submitter;
+        const message =
+          submitter?.dataset.confirmMessage ??
+          form.dataset.confirmMessage ??
+          "";
+        if (!message || form.dataset.apexConfirmBypass === "true") {
+          delete form.dataset.apexConfirmBypass;
+          return;
+        }
+        if (
+          !openConfirmation(message, () => {
+            form.dataset.apexConfirmBypass = "true";
+            if (submitter) {
+              form.requestSubmit(submitter);
+            } else {
+              form.requestSubmit();
+            }
+          })
+        ) {
+          return;
+        }
+        event.preventDefault();
+      });
+    });
+  document.querySelectorAll("a[data-confirm-message]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      if (
+        !openConfirmation(link.dataset.confirmMessage ?? "", () => {
+          window.location.assign(link.href);
+        })
+      ) {
+        return;
+      }
+      event.preventDefault();
+    });
+  });
+  confirmDialog?.addEventListener("close", () => {
+    const action = pendingConfirmation;
+    pendingConfirmation = null;
+    if (confirmDialog.returnValue === "confirm") action?.();
+  });
+
   const supportRequestCheckboxes = Array.from(
     document.querySelectorAll("[data-support-request-select]"),
   );
@@ -39,14 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!supportRequestCheckboxes.some((checkbox) => checkbox.checked)) {
       event.preventDefault();
       return;
-    }
-    if (
-      !window.confirm(
-        deleteSupportRequestsForm.dataset.confirmMessage ??
-          "Permanently delete the selected requests? This cannot be undone.",
-      )
-    ) {
-      event.preventDefault();
     }
   });
 
@@ -147,13 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const shell = document.getElementById("studentDashboardShell");
-  document.querySelectorAll("[data-support-logout-link]").forEach((link) => {
-    link.addEventListener("click", (event) => {
-      if (!window.confirm("You need to sign out before opening public support. Continue?")) {
-        event.preventDefault();
-      }
-    });
-  });
   const navToggle = document.querySelector("[data-portal-nav-toggle]");
   const searchToggle = document.querySelector("[data-people-search-toggle]");
   const sidebar = shell?.querySelector(".student-sidebar");

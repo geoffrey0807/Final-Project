@@ -538,10 +538,17 @@ function initSmoothAnchors() {
       const targetElement = document.querySelector(targetId);
       if (targetElement) {
         e.preventDefault();
-        const headerOffset = 76;
-        const elementPosition = targetElement.getBoundingClientRect().top;
-        const offsetPosition =
-          elementPosition + window.pageYOffset - headerOffset;
+        const mobileOfferingHeading =
+          targetId === "#offerings" &&
+          window.matchMedia("(max-width: 640px)").matches
+            ? targetElement.querySelector(".section-title")
+            : null;
+        const offsetPosition = mobileOfferingHeading
+          ? mobileOfferingHeading.getBoundingClientRect().top +
+            window.pageYOffset +
+            mobileOfferingHeading.offsetHeight / 2 -
+            window.innerHeight / 2
+          : targetElement.getBoundingClientRect().top + window.pageYOffset - 76;
 
         window.scrollTo({
           top: offsetPosition,
@@ -630,7 +637,17 @@ function initLocalAssistant() {
   const input = assistant.querySelector("[data-assistant-input]");
   const sendButton = assistant.querySelector("[data-assistant-send]");
   const honeypot = assistant.querySelector("[data-assistant-honeypot]");
-  if (!launcher || !panel || !closeButton || !messages || !form || !input || !sendButton || !honeypot) return;
+  if (
+    !launcher ||
+    !panel ||
+    !closeButton ||
+    !messages ||
+    !form ||
+    !input ||
+    !sendButton ||
+    !honeypot
+  )
+    return;
 
   const subjects = {
     enrollment: "Enrollment Inquiry",
@@ -679,9 +696,10 @@ function initLocalAssistant() {
     const busy = isTyping || messageQueue.length > 0 || isSubmitting;
     input.disabled = busy;
     sendButton.disabled = busy;
-    input.placeholder = isTyping || messageQueue.length > 0
-      ? "Assistant is typing…"
-      : inputPlaceholder;
+    input.placeholder =
+      isTyping || messageQueue.length > 0
+        ? "Assistant is typing…"
+        : inputPlaceholder;
     if (!busy && !panel.hidden) input.focus();
   };
   const typeMessage = async (bubble, text) => {
@@ -697,7 +715,11 @@ function initLocalAssistant() {
         messages.scrollTop = messages.scrollHeight;
       }
       const character = text[index];
-      const pause = /[.!?…]/.test(character) ? 28 : /[,;:]/.test(character) ? 14 : 4;
+      const pause = /[.!?…]/.test(character)
+        ? 28
+        : /[,;:]/.test(character)
+          ? 14
+          : 4;
       await new Promise((resolve) => window.setTimeout(resolve, pause));
     }
     bubble.classList.remove("is-typing");
@@ -732,7 +754,9 @@ function initLocalAssistant() {
   const sayWelcome = () => {
     if (welcomed) return;
     welcomed = true;
-    reply("Hi! I’m the APEX local support assistant. Tell me what you need help with, and I’ll guide you or send your concern to the Admin team.");
+    reply(
+      "Hi! I’m the APEX local support assistant. Tell me what you need help with, and I’ll guide you or send your concern to the Admin team.",
+    );
     showMenu();
   };
   const setOpen = (open) => {
@@ -776,14 +800,18 @@ function initLocalAssistant() {
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
-        const requestError = new Error(result.message || "Your concern could not be sent.");
+        const requestError = new Error(
+          result.message || "Your concern could not be sent.",
+        );
         requestError.code = result.code || "request_failed";
         throw requestError;
       }
 
-      reply(result.ticket_code
-        ? `${result.message} Your ticket reference is ${result.ticket_code}.`
-        : result.message);
+      reply(
+        result.ticket_code
+          ? `${result.message} Your ticket reference is ${result.ticket_code}.`
+          : result.message,
+      );
       resetFlow();
       showMenu();
     } catch (requestError) {
@@ -792,30 +820,39 @@ function initLocalAssistant() {
         flow.email = "";
         flow.firstName = "";
         flow.lastName = "";
-        reply(`${requestError.message} Please enter your registered APEX email again.`);
+        reply(
+          `${requestError.message} Please enter your registered APEX email again.`,
+        );
       } else if (requestError.code === "apex_email_required") {
         flow.step = "apex-email";
         flow.email = "";
         reply(requestError.message);
       } else if (requestError.code === "invalid_name") {
-        flow.step = flow.apexAccount === "yes" ? "apex-first-name" : "public-name";
+        flow.step =
+          flow.apexAccount === "yes" ? "apex-first-name" : "public-name";
         reply(requestError.message);
       } else if (requestError.code === "invalid_input") {
         flow.step = "concern";
-        reply(`${requestError.message} Please enter your concern again, using no more than 4,800 characters.`);
+        reply(
+          `${requestError.message} Please enter your concern again, using no more than 4,800 characters.`,
+        );
       } else if (requestError.code === "account_required") {
         resetFlow();
         reply(requestError.message);
         showMenu();
       } else if (requestError.code === "csrf_failed") {
         flow.step = "retry";
-        reply("Your session expired. Reload the page before trying to send this request again.");
+        reply(
+          "Your session expired. Reload the page before trying to send this request again.",
+        );
       } else {
         flow.step = "retry";
         const message = requestError.code
           ? requestError.message
           : "The support service could not be reached. Please try again in a moment.";
-        reply(`${message} Reply “retry” to try again, or “menu” to start over.`);
+        reply(
+          `${message} Reply “retry” to try again, or “menu” to start over.`,
+        );
       }
     } finally {
       isSubmitting = false;
@@ -827,9 +864,24 @@ function initLocalAssistant() {
     if (/^1\b/.test(value) || value.includes("enroll")) return "enrollment";
     if (/^2\b/.test(value) || value.includes("policy")) return "policy";
     if (/^3\b/.test(value) || value.includes("technical")) return "technical";
-    if (/^4\b/.test(value) || value.includes("announcement") || value.includes("bulletin")) return "announcement";
-    if (/^5\b/.test(value) || value.includes("account") || value.includes("password")) return "account_access";
-    if (/^6\b/.test(value) || value.includes("appeal") || value.includes("review")) return "appeal";
+    if (
+      /^4\b/.test(value) ||
+      value.includes("announcement") ||
+      value.includes("bulletin")
+    )
+      return "announcement";
+    if (
+      /^5\b/.test(value) ||
+      value.includes("account") ||
+      value.includes("password")
+    )
+      return "account_access";
+    if (
+      /^6\b/.test(value) ||
+      value.includes("appeal") ||
+      value.includes("review")
+    )
+      return "appeal";
     if (/^7\b/.test(value) || value === "other") return "other";
     return "";
   };
@@ -852,27 +904,45 @@ function initLocalAssistant() {
       case "menu": {
         const subject = selectSubject(text);
         if (!subject) {
-          reply("I couldn’t match that to a support area. Reply with a menu number or topic.");
+          reply(
+            "I couldn’t match that to a support area. Reply with a menu number or topic.",
+          );
           showMenu();
           return;
         }
         flow.subject = subject;
         if (subject === "enrollment") {
-          reply("For enrollment, use the Portal registration options and check Announcements for current instructions. The Admin team can clarify requirements for your case.");
+          reply(
+            "For enrollment, use the Portal registration options and check Announcements for current instructions. The Admin team can clarify requirements for your case.",
+          );
           flow.step = "faq-confirm";
-          reply("Would you like to send a related concern to the Admin team? Reply yes or no.");
+          reply(
+            "Would you like to send a related concern to the Admin team? Reply yes or no.",
+          );
         } else if (subject === "policy") {
-          reply("You can review the Policies page for published guidelines. If your question depends on your situation, the Admin team can review the details.");
+          reply(
+            "You can review the Policies page for published guidelines. If your question depends on your situation, the Admin team can review the details.",
+          );
           flow.step = "faq-confirm";
-          reply("Would you like to send a related concern to the Admin team? Reply yes or no.");
+          reply(
+            "Would you like to send a related concern to the Admin team? Reply yes or no.",
+          );
         } else if (subject === "technical") {
-          reply("Try refreshing the page and signing in again. If the problem continues, include the page name and what happened when you send a request.");
+          reply(
+            "Try refreshing the page and signing in again. If the problem continues, include the page name and what happened when you send a request.",
+          );
           flow.step = "faq-confirm";
-          reply("Would you like to send a related concern to the Admin team? Reply yes or no.");
+          reply(
+            "Would you like to send a related concern to the Admin team? Reply yes or no.",
+          );
         } else if (subject === "announcement") {
-          reply("Open Announcements from the site navigation to view current bulletins. If an item is missing or unclear, you can ask the Admin team.");
+          reply(
+            "Open Announcements from the site navigation to view current bulletins. If an item is missing or unclear, you can ask the Admin team.",
+          );
           flow.step = "faq-confirm";
-          reply("Would you like to send a related concern to the Admin team? Reply yes or no.");
+          reply(
+            "Would you like to send a related concern to the Admin team? Reply yes or no.",
+          );
         } else {
           askAccountType();
         }
@@ -895,7 +965,9 @@ function initLocalAssistant() {
           reply("Please enter your APEX email address.");
         } else if (/^(n|no)$/i.test(text)) {
           if (["account_access", "appeal"].includes(flow.subject)) {
-            reply("Account-access and appeal requests need the registered APEX email and matching account name. You can choose Other to send a general question.");
+            reply(
+              "Account-access and appeal requests need the registered APEX email and matching account name. You can choose Other to send a general question.",
+            );
             startOver();
             return;
           }
@@ -955,7 +1027,9 @@ function initLocalAssistant() {
         if (/^(retry|yes|y)$/i.test(text)) {
           await sendConcern();
         } else {
-          reply("Reply “retry” to send the same request again, or “menu” to start over.");
+          reply(
+            "Reply “retry” to send the same request again, or “menu” to start over.",
+          );
         }
         return;
       default:

@@ -6,8 +6,8 @@ require_once '../../includes/admin_account_helpers.php';
 require_once '../../includes/academic_year.php';
 
 $pageTitle = 'User Management | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611052430', '../../css/student.css?v=202610292224'];
-$extraJs = '../../js/admin.js?v=202611051930';
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202610292224'];
+$extraJs = '../../js/admin.js?v=202611111525';
 $bodyClass = 'admin-dashboard student-dashboard admin-portal';
 $useVisualTheme = true;
 $hideSharedSearch = true;
@@ -189,7 +189,7 @@ require_once '../../includes/header.php';
                                     <td><?= htmlspecialchars(ucfirst($accountStatus), ENT_QUOTES, 'UTF-8') ?></td>
                                     <td>
                                         <?php if ($editableRole): ?>
-                                            <button type="button" class="btn btn-outline btn-sm"
+                                            <button type="button" class="btn btn-login-grad btn-sm"
                                                 data-open-modal="adminPasswordModal"
                                                 data-user-id="<?= (int) $account['id'] ?>"
                                                 data-user-name="<?= htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') ?>"
@@ -203,7 +203,7 @@ require_once '../../includes/header.php';
                                             <div class="admin-account-actions">
                                                 <?php if ($accountStatus === 'active'): ?>
                                                     <form action="../../api/admin_accounts_process.php" method="POST"
-                                                        onsubmit="return confirm('Disable access for <?= htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') ?>?');">
+                                                        data-confirm-message="<?= htmlspecialchars('Disable access for ' . $displayName . '?', ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="action" value="disable_user">
                                                         <input type="hidden" name="user_id" value="<?= (int) $account['id'] ?>">
@@ -211,7 +211,7 @@ require_once '../../includes/header.php';
                                                     </form>
                                                 <?php elseif ($accountStatus === 'disabled'): ?>
                                                     <form action="../../api/admin_accounts_process.php" method="POST"
-                                                        onsubmit="return confirm('Restore access for <?= htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') ?>?');">
+                                                        data-confirm-message="<?= htmlspecialchars('Restore access for ' . $displayName . '?', ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="action" value="restore_user">
                                                         <input type="hidden" name="user_id" value="<?= (int) $account['id'] ?>">
@@ -219,7 +219,7 @@ require_once '../../includes/header.php';
                                                         <button type="submit" class="btn btn-outline btn-restore btn-sm">Restore Access</button>
                                                     </form>
                                                     <form action="../../api/admin_accounts_process.php" method="POST"
-                                                        onsubmit="return confirm('Archive <?= htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') ?> for records?');">
+                                                        data-confirm-message="<?= htmlspecialchars('Archive ' . $displayName . ' for records?', ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="action" value="archive_user">
                                                         <input type="hidden" name="user_id" value="<?= (int) $account['id'] ?>">
@@ -228,7 +228,7 @@ require_once '../../includes/header.php';
                                                     </form>
                                                 <?php else: ?>
                                                     <form action="../../api/admin_accounts_process.php" method="POST"
-                                                        onsubmit="return confirm('Unarchive <?= htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') ?> and move the account back to Disabled Accounts?');">
+                                                        data-confirm-message="<?= htmlspecialchars('Unarchive ' . $displayName . ' and move the account back to Disabled Accounts?', ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="action" value="unarchive_user">
                                                         <input type="hidden" name="user_id" value="<?= (int) $account['id'] ?>">

@@ -18,6 +18,7 @@ function materializeExpiredAssessmentSubmissions(
         WHERE a.course_id = :course_id
           AND a.academic_year = :assessment_year
           AND a.semester = :assessment_semester
+                    AND a.is_draft = 0
           AND e.academic_year = :enrollment_year
           AND e.semester = :enrollment_semester
           AND a.deadline < NOW()
@@ -46,6 +47,7 @@ function materializeExpiredAssessmentSubmissions(
                 WHERE a.course_id = :course_id
                     AND a.academic_year = :assessment_year
                     AND a.semester = :assessment_semester
+                    AND a.is_draft = 0
                     AND e.academic_year = :enrollment_year
                     AND e.semester = :enrollment_semester
                     AND submission.status = 'Pending'

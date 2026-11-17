@@ -1,4 +1,4 @@
-* {
+﻿* {
   box-sizing: border-box;
 }
 
@@ -75,8 +75,8 @@ body.student-assessment-focus-page > .app-main {
 }
 
 .assessment-focus-back:hover {
-  border-color: #c56e80;
-  background: #c56e80;
+  border-color: #a52d4a;
+  background: #a52d4a;
 }
 
 .assessment-focus-timer {
@@ -290,7 +290,7 @@ body.student-assessment-focus-page > .app-main {
 }
 
 .assessment-focus-submit:hover {
-  background: #c56e80;
+  background: #a52d4a;
 }
 
 .assessment-focus-result {
@@ -356,7 +356,7 @@ body.student-assessment-focus-page > .app-main {
 
 .assessment-focus-confirm-warning {
   padding: 0.75rem;
-  border-left: 2px solid #b94f63;
+  border-left: 2px solid #a52d4a;
   border-radius: var(--radius-sm);
   background: var(--red-light);
   color: var(--text-main);
@@ -395,8 +395,8 @@ body.student-assessment-focus-page > .app-main {
 }
 
 .assessment-focus-confirm-actions button.assessment-focus-confirm-danger {
-  border-color: #b94f63;
-  background: #b94f63;
+  border-color: #a52d4a;
+  background: #a52d4a;
   color: #fff;
 }
 
@@ -425,3 +425,4 @@ body.student-assessment-focus-page > .app-main {
     gap: 0.6rem;
   }
 }
+

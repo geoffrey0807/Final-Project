@@ -24,13 +24,14 @@ $publicAssistantCsrfToken = $_SESSION['contact_request_csrf'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg?v=202611100755">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/visual.css?v=202611051945">
-    <link rel="stylesheet" href="../css/announcement-attachments.css?v=202611062030">
-    <link rel="stylesheet" href="../css/portal-toast.css?v=202611041835">
+    <link rel="stylesheet" href="css/visual.css?v=202611101730">
+    <link rel="stylesheet" href="../css/announcement-attachments.css?v=202611100020">
+    <link rel="stylesheet" href="../css/portal-toast.css?v=202611092125">
 </head>
 
 <body<?= !empty($bodyClass) ? ' class="' . htmlspecialchars($bodyClass) . '"' : '' ?>>

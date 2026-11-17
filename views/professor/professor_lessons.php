@@ -26,7 +26,7 @@ $pointList = [
 
 $professorView = 'lessons';
 $pageTitle = 'Upload Lessons | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611061140', '../../css/student.css?v=202611020900'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611020900'];
 $extraJs = ['../../js/admin.js?v=202611010115', '../../js/student.js?v=202610301825'];
 $bodyClass = 'admin-dashboard student-dashboard professor-portal';
 $useVisualTheme = true;
@@ -43,7 +43,7 @@ require_once '../../includes/header.php';
         <section class="professor-course-panel">
             <div class="professor-course-panel-header">
                 <h2>Course Materials</h2>
-                <button type="button" class="professor-course-action-button">+ Upload Material</button>
+                <button type="button" class="professor-course-action-button professor-upload-button">+ Upload Material</button>
             </div>
             <div class="professor-course-file-list">
                 <?php foreach ($pointList as $item): ?>

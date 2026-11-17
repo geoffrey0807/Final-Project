@@ -407,6 +407,10 @@ try {
             if (!is_array($submittedQuestions) || count($submittedQuestions) < 1 || count($submittedQuestions) > 60) {
                 respond(false, 'Add at least one question (up to 60).', $courseRedirect);
             }
+            $questionImageFiles = $_FILES['question_images'] ?? [];
+            if (!is_array($questionImageFiles)) {
+                respond(false, 'Choose a valid question image.', $courseRedirect);
+            }
             $questionPayloads = [];
             $questionPoints = 0.0;
             foreach ($submittedQuestions as $index => $question) {
@@ -417,6 +421,37 @@ try {
                 $points = is_numeric($question['points'] ?? null) ? (float) $question['points'] : 0.0;
                 if ($questionText === '' || mb_strlen($questionText) > 10000 || $points <= 0 || $points > 100000) {
                     respond(false, 'Every question needs text and a positive point value.', $courseRedirect);
+                }
+
+                $questionImageUpload = null;
+                $imageUploadError = $questionImageFiles['error'][$index] ?? UPLOAD_ERR_NO_FILE;
+                if (!is_int($imageUploadError)) {
+                    respond(false, 'Choose a valid question image.', $courseRedirect);
+                }
+                if ($imageUploadError !== UPLOAD_ERR_NO_FILE) {
+                    $temporaryPath = $questionImageFiles['tmp_name'][$index] ?? null;
+                    $imageSize = (int) ($questionImageFiles['size'][$index] ?? 0);
+                    if (
+                        $imageUploadError !== UPLOAD_ERR_OK
+                        || !is_string($temporaryPath) || !is_uploaded_file($temporaryPath)
+                        || $imageSize < 1 || $imageSize > 5 * 1024 * 1024
+                    ) {
+                        respond(false, 'Question images must be valid files no larger than 5 MB.', $courseRedirect);
+                    }
+
+                    $mimeType = (new finfo(FILEINFO_MIME_TYPE))->file($temporaryPath);
+                    $imageExtensions = [
+                        'image/jpeg' => 'jpg',
+                        'image/png' => 'png',
+                        'image/webp' => 'webp',
+                    ];
+                    if (!isset($imageExtensions[$mimeType]) || @getimagesize($temporaryPath) === false) {
+                        respond(false, 'Use a valid JPG, PNG, or WebP question image.', $courseRedirect);
+                    }
+                    $questionImageUpload = [
+                        'temporary_path' => $temporaryPath,
+                        'extension' => $imageExtensions[$mimeType],
+                    ];
                 }
 
                 if ($questionFormat === 'Multiple Choice') {
@@ -457,6 +492,8 @@ try {
 
                 $questionPayloads[] = [
                     'question_text' => $questionText,
+                    'image_upload' => $questionImageUpload,
+                    'image_path' => null,
                     'question_type' => $questionType,
                     'choices_json' => $choices === null ? null : json_encode($choices, JSON_UNESCAPED_UNICODE),
                     'correct_answer' => $correctAnswer,
@@ -466,19 +503,55 @@ try {
                 $questionPoints += $points;
             }
 
-            if (abs($questionPoints - $totalPoints) > 0.01) {
-                respond(false, 'The question points must add up to the assessment total points.', $courseRedirect);
+            $isDraft = abs($questionPoints - $totalPoints) > 0.01;
+
+            $questionImageDirectory = dirname(__DIR__)
+                . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'assessment-questions';
+            $storedQuestionImagePaths = [];
+            $hasQuestionImages = array_filter(
+                $questionPayloads,
+                static fn(array $payload): bool => $payload['image_upload'] !== null
+            ) !== [];
+            if (
+                $hasQuestionImages
+                && !is_dir($questionImageDirectory)
+                && !mkdir($questionImageDirectory, 0750, true)
+                && !is_dir($questionImageDirectory)
+            ) {
+                respond(false, 'Question image storage is unavailable.', $courseRedirect);
             }
+            foreach ($questionPayloads as &$questionPayload) {
+                $imageUpload = $questionPayload['image_upload'];
+                unset($questionPayload['image_upload']);
+                if ($imageUpload === null) {
+                    continue;
+                }
+
+                $imageName = bin2hex(random_bytes(16)) . '.' . $imageUpload['extension'];
+                $imageDestination = $questionImageDirectory . DIRECTORY_SEPARATOR . $imageName;
+                if (!move_uploaded_file($imageUpload['temporary_path'], $imageDestination)) {
+                    foreach ($storedQuestionImagePaths as $storedImagePath) {
+                        if (is_file($storedImagePath)) {
+                            unlink($storedImagePath);
+                        }
+                    }
+                    respond(false, 'A question image could not be saved.', $courseRedirect);
+                }
+
+                $questionPayload['image_path'] = 'uploads/assessment-questions/' . $imageName;
+                $storedQuestionImagePaths[] = $imageDestination;
+            }
+            unset($questionPayload);
 
             $pdo->beginTransaction();
             try {
                 $assessmentInsert = $pdo->prepare("
                     INSERT INTO assessments
                         (course_id, professor_id, title, description, term, assessment_type,
-                         question_format, total_points, deadline, time_limit_minutes, academic_year, semester)
+                         question_format, total_points, deadline, time_limit_minutes, is_draft, academic_year, semester)
                     VALUES
                         (:course_id, :professor_id, :title, :description, :term, :assessment_type,
-                         :question_format, :total_points, :deadline, :time_limit_minutes, :academic_year, :semester)
+                         :question_format, :total_points, :deadline, :time_limit_minutes, :is_draft, :academic_year, :semester)
                 ");
                 $assessmentInsert->execute([
                     'course_id' => $courseId,
@@ -491,15 +564,16 @@ try {
                     'total_points' => $totalPoints,
                     'deadline' => $deadline->format('Y-m-d H:i:s'),
                     'time_limit_minutes' => $timeLimitMinutes,
+                    'is_draft' => $isDraft ? 1 : 0,
                     'academic_year' => $academicPeriod['academic_year'],
                     'semester' => $academicPeriod['semester'],
                 ]);
                 $assessmentId = (int) $pdo->lastInsertId();
                 $questionInsert = $pdo->prepare("
                     INSERT INTO assessment_questions
-                        (assessment_id, question_text, question_type, choices_json, correct_answer, points, question_order)
+                        (assessment_id, question_text, image_path, question_type, choices_json, correct_answer, points, question_order)
                     VALUES
-                        (:assessment_id, :question_text, :question_type, :choices_json, :correct_answer, :points, :question_order)
+                        (:assessment_id, :question_text, :image_path, :question_type, :choices_json, :correct_answer, :points, :question_order)
                 ");
                 foreach ($questionPayloads as $questionPayload) {
                     $questionInsert->execute(array_merge(
@@ -512,10 +586,17 @@ try {
                 if ($pdo->inTransaction()) {
                     $pdo->rollBack();
                 }
+                foreach ($storedQuestionImagePaths as $storedImagePath) {
+                    if (is_file($storedImagePath)) {
+                        unlink($storedImagePath);
+                    }
+                }
                 throw $exception;
             }
 
-            respond(true, 'Assessment created for your class.', $courseRedirect);
+            respond(true, $isDraft
+                ? 'Assessment saved as a draft. Edit it after correcting the question points to make it available to students.'
+                : 'Assessment created for your class.', $courseRedirect);
             break;
 
         case 'update_assessment':
@@ -527,6 +608,9 @@ try {
             $term = $termIsValid ? $requestedTerm : 'Prelim';
             $title = trim((string) ($_POST['title'] ?? ''));
             $description = trim((string) ($_POST['description'] ?? ''));
+            $requestedTotalPoints = is_numeric($_POST['total_points'] ?? null)
+                ? (float) $_POST['total_points']
+                : 0.0;
             $timeLimitInput = $_POST['time_limit_minutes'] ?? '';
             $timeLimitMinutes = $timeLimitInput === ''
                 ? null
@@ -548,13 +632,14 @@ try {
                 || !$termIsValid
                 || $title === '' || mb_strlen($title) > 150
                 || mb_strlen($description) > 10000
+                || $requestedTotalPoints <= 0 || $requestedTotalPoints > 100000
                 || ($timeLimitMinutes !== null && ($timeLimitMinutes < 1 || $timeLimitMinutes > 1440))
             ) {
                 respond(false, 'Check the assessment title and description, then try again.', $editRedirect);
             }
 
             $editableAssessmentStmt = $pdo->prepare("
-                SELECT a.id, a.deadline
+                SELECT a.id, a.deadline, a.is_draft
                 FROM assessments a
                 JOIN courses c ON c.id = a.course_id
                 WHERE a.id = :assessment_id
@@ -581,7 +666,10 @@ try {
             if (!$editableAssessment) {
                 respond(false, 'Assessment not found in your assigned classes.', $editRedirect);
             }
-            if (new DateTimeImmutable((string) $editableAssessment['deadline'], new DateTimeZone('Asia/Manila')) > new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'))) {
+            if (
+                empty($editableAssessment['is_draft'])
+                && new DateTimeImmutable((string) $editableAssessment['deadline'], new DateTimeZone('Asia/Manila')) > new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'))
+            ) {
                 respond(false, 'Assessment questions can only be edited after the deadline.', $editRedirect);
             }
 
@@ -668,22 +756,30 @@ try {
                 $totalPoints += $points;
             }
 
-            if (count($submittedQuestionIds) !== count($existingQuestions) || $totalPoints > 100000) {
+            if (count($submittedQuestionIds) !== count($existingQuestions)) {
                 respond(false, 'The question list or total points are invalid.', $editRedirect);
             }
+
+            $pointsMatch = abs($totalPoints - $requestedTotalPoints) <= 0.01;
+            if (empty($editableAssessment['is_draft']) && !$pointsMatch) {
+                respond(false, 'Published assessment question points must match the assessment total.', $editRedirect);
+            }
+            $isDraft = !$pointsMatch;
 
             $pdo->beginTransaction();
             try {
                 $updateAssessmentStmt = $pdo->prepare("
                     UPDATE assessments
                     SET title = :title, description = :description, total_points = :total_points,
+                        is_draft = :is_draft,
                         time_limit_minutes = :time_limit_minutes
                     WHERE id = :assessment_id AND course_id = :course_id
                 ");
                 $updateAssessmentStmt->execute([
                     'title' => $title,
                     'description' => $description,
-                    'total_points' => $totalPoints,
+                    'total_points' => $requestedTotalPoints,
+                    'is_draft' => $isDraft ? 1 : 0,
                     'time_limit_minutes' => $timeLimitMinutes,
                     'assessment_id' => $assessmentId,
                     'course_id' => $courseId,
@@ -716,7 +812,11 @@ try {
                 throw $exception;
             }
 
-            respond(true, 'Assessment changes saved.', $viewRedirect);
+            respond(true, $isDraft
+                ? 'Draft saved. Adjust the question points to match the total to publish it.'
+                : (!empty($editableAssessment['is_draft'])
+                    ? 'Assessment draft published.'
+                    : 'Assessment changes saved.'), $isDraft ? $editRedirect : $viewRedirect);
             break;
 
         case 'reopen_student_submission':
@@ -765,6 +865,7 @@ try {
                   AND a.professor_id = :professor_id
                   AND a.academic_year = :academic_year
                   AND a.semester = :semester
+                  AND a.is_draft = 0
                   AND s.status IN ('Submitted', 'Missed')
             ");
             $reopenStmt->execute([
@@ -842,6 +943,7 @@ try {
                   AND a.academic_year = :academic_year
                   AND a.semester = :semester
                   AND a.id = :assessment_id
+                  AND a.is_draft = 0
                   AND s.student_id = :student_id
                   AND s.status = 'Submitted'
             ");

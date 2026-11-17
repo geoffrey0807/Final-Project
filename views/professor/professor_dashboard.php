@@ -5,7 +5,7 @@ require_once '../../config/db.php';
 require_once '../../includes/dashboard_greeting.php';
 require_once '../../includes/announcement_access.php';
 
-$extraCss = ['../../css/admin.css?v=202611061140', '../../css/student.css?v=202611020900'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611020900'];
 $extraJs = ['../../js/admin.js?v=202611010115', '../../js/student.js?v=202610301825'];
 $bodyClass = 'admin-dashboard student-dashboard professor-portal';
 $useVisualTheme = true;
@@ -372,7 +372,7 @@ require_once '../../includes/header.php';
                                         </td>
                                         <td>
                                             <form action="../../api/professor_process.php" method="POST"
-                                                onsubmit="return confirm('Delete this announcement?');">
+                                                data-confirm-message="Delete this announcement?">
                                                 <input type="hidden" name="action" value="delete_announcement">
                                                 <input type="hidden" name="announcement_id" value="<?= $ann['id'] ?>">
                                                 <button type="submit" class="btn btn-outline btn-sm"
@@ -449,7 +449,7 @@ require_once '../../includes/header.php';
                                                     </td>
                                                     <td>
                                                         <form action="../../api/professor_process.php" method="POST"
-                                                            onsubmit="return confirm('Delete this item for all enrolled students?');">
+                                                            data-confirm-message="Delete this item for all enrolled students?">
                                                             <input type="hidden" name="action" value="delete_assignment">
                                                             <input type="hidden" name="assignment_id"
                                                                 value="<?= (int) $assignment['id'] ?>">
@@ -502,7 +502,7 @@ require_once '../../includes/header.php';
                                         <small class="text-muted"><?= htmlspecialchars($lesson['course_name']) ?> &middot;
                                             <?= htmlspecialchars(date('M d, Y', strtotime($lesson['created_at']))) ?></small>
                                         <form action="../../api/professor_process.php" method="POST"
-                                            onsubmit="return confirm('Delete this lesson?');">
+                                            data-confirm-message="Delete this lesson?">
                                             <input type="hidden" name="action" value="delete_lesson">
                                             <input type="hidden" name="lesson_id" value="<?= (int) $lesson['id'] ?>">
                                             <button type="submit" class="btn btn-outline btn-sm"

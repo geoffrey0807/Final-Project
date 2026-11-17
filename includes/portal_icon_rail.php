@@ -1,10 +1,12 @@
 <?php
 require_once __DIR__ . '/portal_notification_counts.php';
-$portalNotificationCounts = portalNotificationCounts(
-    $pdo,
-    (int) $_SESSION['user_id'],
-    (string) $_SESSION['role']
-);
+if (!isset($portalNotificationCounts)) {
+    $portalNotificationCounts = portalNotificationCounts(
+        $pdo,
+        (int) $_SESSION['user_id'],
+        (string) $_SESSION['role']
+    );
+}
 $portalProfileHref = match ($activeUserRole) {
     'admin' => ($portalViewBase ?? '') . 'admin_profile.php',
     'registrar' => ($portalViewBase ?? '') . 'registrar_profile.php',

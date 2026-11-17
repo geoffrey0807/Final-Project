@@ -12,9 +12,21 @@ CREATE TABLE IF NOT EXISTS user_announcement_reads (
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT IGNORE INTO user_announcement_reads (announcement_id, user_id, read_at)
-SELECT announcement_id, student_id, read_at
-FROM student_announcement_reads;
+SET @migration_schema = DATABASE();
+SET @migration_sql = IF(
+    EXISTS (
+        SELECT 1 FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = @migration_schema
+          AND TABLE_NAME = 'student_announcement_reads'
+    ),
+    'INSERT IGNORE INTO user_announcement_reads (announcement_id, user_id, read_at) SELECT announcement_id, student_id, read_at FROM student_announcement_reads',
+    'DO 0'
+);
+PREPARE migration_statement FROM @migration_sql;
+EXECUTE migration_statement;
+DEALLOCATE PREPARE migration_statement;
+
+DROP TABLE IF EXISTS student_announcement_reads;
 
 CREATE TABLE IF NOT EXISTS registrar_announcement_acknowledgements (
     announcement_id INT NOT NULL,

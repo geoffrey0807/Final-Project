@@ -1,0 +1,476 @@
+@media screen and (max-width: 768px) {
+  body[data-apex-mobile-navigation="enabled"] {
+    padding-top: 64px !important;
+  }
+
+  body[data-apex-mobile-navigation="enabled"] > .app-navbar {
+    display: none !important;
+  }
+
+  .apex-mobile-navigation {
+    display: block;
+    --mobile-rose: #d88390;
+    --mobile-terracotta: #e07a5f;
+    --mobile-ink: #342d31;
+    --mobile-muted: #786e73;
+    --mobile-line: #eee3e5;
+  }
+
+  body:is(
+      .admin-dashboard,
+      .student-dashboard,
+      .dean-portal,
+      .professor-portal,
+      .registrar-portal
+    )
+    h1 {
+    color: #c73659 !important;
+  }
+
+  .apex-mobile-topbar {
+    position: fixed;
+    z-index: 1400;
+    inset: 0 0 auto;
+    display: flex;
+    min-height: 64px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0 0.75rem 0 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+    background: #c73659;
+    box-shadow: 0 3px 14px rgba(112, 38, 59, 0.18);
+  }
+
+  .apex-mobile-brand {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.55rem;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .apex-mobile-brand > svg {
+    width: 30px;
+    height: 27px;
+    flex: 0 0 30px;
+    fill: #fff;
+  }
+
+  .apex-mobile-brand-copy {
+    display: grid;
+    color: #fff;
+    line-height: 1.05;
+  }
+
+  .apex-mobile-brand-copy strong {
+    font-size: 0.95rem;
+    font-weight: 900;
+  }
+
+  .apex-mobile-brand-copy small {
+    display: block;
+    margin-top: 0.18rem;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.63rem;
+    font-weight: 600;
+    line-height: 1.15;
+  }
+
+  .apex-mobile-top-actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .apex-mobile-action {
+    display: inline-grid;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .apex-mobile-action:focus-visible,
+  .apex-mobile-link:focus-visible,
+  .apex-mobile-user:focus-visible,
+  .apex-mobile-signout:focus-visible {
+    outline: 3px solid rgba(224, 122, 95, 0.55);
+    outline-offset: 2px;
+  }
+
+  .apex-mobile-action > svg,
+  .apex-mobile-search-field > svg,
+  .apex-mobile-link > svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .apex-mobile-topbar .apex-mobile-action > svg {
+    stroke: #fff;
+  }
+
+  .apex-mobile-backdrop {
+    position: fixed;
+    z-index: 1450;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: rgba(36, 27, 31, 0.44);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  .apex-mobile-backdrop[hidden],
+  .apex-mobile-drawer[hidden] {
+    display: none !important;
+  }
+
+  .apex-mobile-backdrop.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .apex-mobile-drawer {
+    position: fixed;
+    z-index: 1500;
+    inset: 0 auto 0 0;
+    display: flex;
+    width: min(340px, calc(100vw - 48px));
+    max-width: 100%;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 0.9rem max(1rem, env(safe-area-inset-bottom));
+    border: 0;
+    background: #fff;
+    color: var(--mobile-ink);
+    box-shadow: 18px 0 45px rgba(52, 45, 49, 0.15);
+    transform: translateX(-105%);
+    transition: transform 0.3s ease-in-out;
+    pointer-events: none;
+    touch-action: pan-y;
+  }
+
+  .apex-mobile-drawer.is-active {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .apex-mobile-drawer-heading {
+    display: flex;
+    min-height: 60px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .apex-mobile-user {
+    display: flex;
+    min-width: 0;
+    min-height: 52px;
+    align-items: center;
+    gap: 0.7rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .apex-mobile-avatar {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .apex-mobile-avatar-initials {
+    display: grid;
+    place-items: center;
+    background: #d88390;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 800;
+  }
+
+  .apex-mobile-user-copy {
+    display: grid;
+    min-width: 0;
+    gap: 0.25rem;
+  }
+
+  .apex-mobile-user-copy strong {
+    overflow: hidden;
+    color: var(--mobile-ink);
+    font-size: 0.95rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .apex-mobile-user-copy small {
+    width: fit-content;
+    padding: 0.18rem 0.48rem;
+    border-radius: 999px;
+    background: #fff0ef;
+    color: #a84a50;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .apex-mobile-close {
+    flex: 0 0 44px;
+  }
+
+  .apex-mobile-search-field {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0.15rem 0 1rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--mobile-line);
+    border-radius: 10px;
+    background: #fffafa;
+    color: var(--mobile-muted);
+  }
+
+  .apex-mobile-search-field input {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--mobile-ink);
+    font: inherit;
+  }
+
+  .apex-mobile-search-scope {
+    margin: -0.55rem 0 0;
+    color: var(--mobile-muted);
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .apex-mobile-people-results {
+    display: grid;
+    max-height: min(32vh, 280px);
+    flex: 0 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin-bottom: 0.35rem;
+    padding: 0 0.35rem;
+    border-bottom: 1px solid var(--mobile-line);
+  }
+
+  .apex-mobile-people-results .portal-people-search-result {
+    padding: 0.6rem 0.1rem;
+  }
+
+  .apex-mobile-people-results .portal-people-search-message {
+    padding: 0.55rem 0;
+    font-size: 0.78rem;
+  }
+
+  .apex-mobile-links {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .apex-mobile-link {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.55rem 0.7rem;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--mobile-ink);
+    font: inherit;
+    font-size: 0.93rem;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .apex-mobile-link > svg {
+    flex: 0 0 21px;
+    color: var(--mobile-muted);
+  }
+
+  .apex-mobile-link-copy {
+    display: grid;
+    min-width: 0;
+    gap: 0.1rem;
+  }
+
+  .apex-mobile-link-copy > small {
+    color: var(--mobile-muted);
+    font-size: 0.7rem;
+    line-height: 1.25;
+  }
+
+  .apex-mobile-badge {
+    display: inline-flex;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: #d88390;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .apex-mobile-link:not([aria-current="page"]):hover,
+  .apex-mobile-link:not([aria-current="page"]):active {
+    background: transparent;
+    color: var(--mobile-ink);
+  }
+
+  .apex-mobile-link[aria-current="page"] {
+    background: #fff0ef;
+    color: #9c3e48;
+  }
+
+  .apex-mobile-link[aria-current="page"] > svg {
+    color: #b45c64;
+  }
+
+  .apex-mobile-link[hidden] {
+    display: none !important;
+  }
+
+  .apex-mobile-no-results {
+    margin: 0;
+    padding: 0.9rem 0.7rem;
+    color: var(--mobile-muted);
+    font-size: 0.88rem;
+  }
+
+  .apex-mobile-signout {
+    display: flex;
+    position: sticky;
+    bottom: 45px;
+    flex: 0 0 48px;
+    min-height: 48px;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: auto;
+    padding: 0 0.7rem;
+    background: #fff;
+    border-top: 1px solid var(--mobile-line);
+    color: #9c3e48;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .apex-mobile-signout > svg {
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .apex-mobile-navigation .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  body[data-apex-mobile-navigation="enabled"].nav-open {
+    overflow: hidden !important;
+    touch-action: none;
+  }
+
+  body[data-apex-mobile-navigation="enabled"] .portal-icon-rail,
+  body[data-apex-mobile-navigation="enabled"]
+    .student-dashboard-shell
+    .student-sidebar,
+  body[data-apex-mobile-navigation="enabled"]
+    .student-dashboard-shell
+    .student-sidebar-backdrop,
+  body[data-apex-mobile-navigation="enabled"] .student-mobile-toggle {
+    display: none !important;
+  }
+
+  body[data-apex-mobile-navigation="enabled"] .student-dashboard-shell,
+  body[data-apex-mobile-navigation="enabled"]
+    .student-dashboard-shell.has-dashboard-announcements,
+  body[data-apex-mobile-navigation="enabled"]
+    .student-dashboard-shell.people-search-open {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 0.9rem 0.8rem 2rem;
+  }
+
+  body[data-apex-mobile-navigation="enabled"]
+    .student-dashboard-shell
+    .student-dashboard-content.container,
+  body[data-apex-mobile-navigation="enabled"]
+    .student-dashboard-shell:not(.has-dashboard-announcements)
+    .student-dashboard-content.container,
+  body[data-apex-mobile-navigation="enabled"] .dashboard-announcements {
+    grid-column: 1;
+  }
+
+  body[data-apex-mobile-navigation="enabled"]
+    .student-dashboard-shell
+    .student-dashboard-content.container {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .apex-mobile-drawer,
+    .apex-mobile-backdrop {
+      transition-duration: 0.01ms;
+    }
+  }
+}
+
+@media screen and (min-width: 769px) {
+  .apex-mobile-navigation,
+  .apex-mobile-topbar,
+  .apex-mobile-drawer,
+  .apex-mobile-backdrop {
+    display: none !important;
+  }
+}

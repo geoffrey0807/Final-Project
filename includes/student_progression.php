@@ -48,7 +48,11 @@ function isValidStudentProgression(
                 && $targetSemester === 'second'));
 
     return match ($status) {
-        'new', 'initial' => $previousYearLevel === null && $targetYearLevel === 1,
+        'new' => $previousYearLevel === null && $targetYearLevel === 1,
+        'initial' => $previousYearLevel === null
+            && $currentYearLevel !== null
+            && $targetYearLevel === $currentYearLevel
+            && $targetYearLevel >= 1,
         'continued' => $previousYearLevel !== null
             && $currentYearLevel !== null
             && $targetYearLevel === $currentYearLevel,

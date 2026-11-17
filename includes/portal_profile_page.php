@@ -28,8 +28,8 @@ if (preg_match('/\Auploads\/profiles\/[a-f0-9]{32}\.(?:jpg|png|webp)\z/', $profi
 
 $pageTitle = 'My Profile | APEX Learning Hub';
 $extraCss = [
-    '../../css/admin.css?v=202610301240',
-    '../../css/student.css?v=202611020900',
+    '../../css/admin.css?v=202611100055',
+    '../../css/student.css?v=202611100055',
     '../../css/portal-profile.css?v=' . time()
 ];
 $extraJs = $portalProfileRole === 'student'
@@ -57,15 +57,15 @@ require_once __DIR__ . '/header.php';
             <div class="portal-profile-grid">
                 
                 <!-- ======================================================== -->
-                <!-- FORM 1: PERSONAL INFORMATION & PHOTO (SEPARATED)        -->
+                <!-- FORM 1: PROFILE PHOTO                                  -->
                 <!-- ======================================================== -->
                 <section class="portal-profile-card" aria-labelledby="personalInfoHeading">
                     <div class="portal-card-header">
                         <h2 class="portal-card-title" id="personalInfoHeading">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                            Personal Information
+                            Profile picture
                         </h2>
-                        <p class="portal-card-desc">Update your profile picture and personal details.</p>
+                        <p class="portal-card-desc">Update your profile picture.</p>
                     </div>
 
                     <form id="portalProfileInfoForm" class="portal-profile-form" action="../../api/portal_profile_process.php" method="post" enctype="multipart/form-data">
@@ -84,14 +84,15 @@ require_once __DIR__ . '/header.php';
                             </div>
                             <div class="portal-profile-photo-controls">
                                 <div class="portal-photo-btn-group">
-                                    <label class="btn btn-outline portal-profile-photo-btn" for="profilePhoto" data-add-photo-btn>
+                                    <label class="btn btn-coral portal-profile-photo-btn" for="profilePhoto" data-add-photo-btn>
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                                         <span>Add photo</span>
                                     </label>
                                     <?php if ($profilePhotoPath !== ''): ?>
                                         <button class="btn btn-outline portal-profile-remove-photo-btn" type="submit"
                                             name="remove_profile_photo" value="1" formnovalidate
-                                            data-profile-photo-remove>Remove photo</button>
+                                            data-profile-photo-remove
+                                            data-confirm-message="Remove your current profile photo?">Remove photo</button>
                                     <?php endif; ?>
                                     <input class="portal-profile-file-input" type="file" id="profilePhoto" name="profile_photo"
                                         accept="image/jpeg,image/png,image/webp" data-profile-photo-input>
@@ -104,29 +105,26 @@ require_once __DIR__ . '/header.php';
                             </div>
                         </div>
 
-                        <!-- Fields List (Proportionate Full-Width to match right card) -->
-                        <div class="portal-form-fields">
-                            <div class="form-group">
-                                <label for="profileFirstName">First name <span class="required">*</span></label>
-                                <input class="form-control" id="profileFirstName" name="first_name" maxlength="50"
-                                    value="<?= htmlspecialchars($profile['first_name'], ENT_QUOTES, 'UTF-8') ?>" autocomplete="given-name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="profileLastName">Last name <span class="required">*</span></label>
-                                <input class="form-control" id="profileLastName" name="last_name" maxlength="50"
-                                    value="<?= htmlspecialchars($profile['last_name'], ENT_QUOTES, 'UTF-8') ?>" autocomplete="family-name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="profileEmail">APEX email <span class="required">*</span></label>
-                                <input class="form-control" type="email" id="profileEmail" name="email" maxlength="100"
-                                    pattern="[A-Za-z0-9._%+\-]+@apex\.edu\.ph"
-                                    title="Use an APEX email ending in @apex.edu.ph."
-                                    value="<?= htmlspecialchars($profile['email'], ENT_QUOTES, 'UTF-8') ?>" autocomplete="email" required>
-                            </div>
+                        <div class="portal-profile-account-details" aria-label="Account details">
+                            <h3>Account details</h3>
+                            <dl>
+                                <div>
+                                    <dt>First name</dt>
+                                    <dd><?= htmlspecialchars($profile['first_name'], ENT_QUOTES, 'UTF-8') ?></dd>
+                                </div>
+                                <div>
+                                    <dt>Last name</dt>
+                                    <dd><?= htmlspecialchars($profile['last_name'], ENT_QUOTES, 'UTF-8') ?></dd>
+                                </div>
+                                <div>
+                                    <dt>APEX email</dt>
+                                    <dd><?= htmlspecialchars($profile['email'], ENT_QUOTES, 'UTF-8') ?></dd>
+                                </div>
+                            </dl>
                         </div>
 
                         <div class="portal-card-actions">
-                            <button class="btn btn-primary" type="submit">Save information</button>
+                            <button class="btn btn-primary" type="submit">Update profile picture</button>
                             <a class="btn btn-outline" href="<?= htmlspecialchars($portalProfileDashboard, ENT_QUOTES, 'UTF-8') ?>">Cancel</a>
                         </div>
                     </form>

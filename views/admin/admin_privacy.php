@@ -2,7 +2,7 @@
 require_once '../../includes/session_check.php';
 checkAccess(['admin'], '../../auth/login.php');
 $pageTitle = 'Privacy Policy | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202610301835', '../../css/student.css?v=202610311320'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202610311320'];
 $extraJs = ['../../js/admin.js?v=202610301355', '../../js/student.js?v=202610301835'];
 $bodyClass = 'admin-dashboard student-dashboard admin-portal';
 $useVisualTheme = true;

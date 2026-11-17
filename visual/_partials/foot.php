@@ -34,6 +34,22 @@ require_once __DIR__ . '/../../includes/portal_toast.php';
 </footer>
 
 <?php renderPortalToast(); ?>
+<dialog class="apex-confirm-dialog" id="apexConfirmDialog" aria-labelledby="apexConfirmTitle"
+    aria-describedby="apexConfirmMessage">
+    <form method="dialog">
+        <div class="modal-header">
+            <h2 class="modal-title" id="apexConfirmTitle">Please confirm</h2>
+            <button type="submit" class="modal-close" value="cancel" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p id="apexConfirmMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-outline" value="cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" value="confirm">Continue</button>
+        </div>
+    </form>
+</dialog>
 
 <!-- Interactive Back-To-Top Button with Chevron -->
 <button type="button" id="backToTop"
@@ -61,7 +77,7 @@ require_once __DIR__ . '/../../includes/portal_toast.php';
                         stroke-linecap="round" />
                 </svg>
             </span>
-            Contact us
+            Contact support
 
         </button>
         <section class="apex-assistant-panel" id="apexAssistantPanel" data-assistant-panel hidden role="dialog"
@@ -83,7 +99,8 @@ require_once __DIR__ . '/../../includes/portal_toast.php';
                 <input type="text" name="fax_number" data-assistant-honeypot tabindex="-1" class="apex-assistant-honeypot"
                     autocomplete="new-password" aria-hidden="true">
                 <button type="submit" data-assistant-send aria-label="Send message">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
                         <path d="M4 12 20 4l-5 16-3-7-8-1Zm8 1 8-9"></path>
                     </svg>
                 </button>
@@ -93,7 +110,7 @@ require_once __DIR__ . '/../../includes/portal_toast.php';
     </aside>
 <?php endif; ?>
 
-<script src="<?= htmlspecialchars($visualBase) ?>js/visual.js?v=202611051815"></script>
+<script src="<?= htmlspecialchars($visualBase) ?>js/visual.js?v=202611101731"></script>
 <?php if (!empty($publicAnnouncementPage)): ?>
     <script src="<?= htmlspecialchars($visualBase) ?>../js/announcement-attachments.js?v=202611062030"></script>
 <?php endif; ?>

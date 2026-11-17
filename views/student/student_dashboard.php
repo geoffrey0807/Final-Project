@@ -7,7 +7,7 @@ require_once '../../includes/academic_access.php';
 require_once '../../includes/announcement_access.php';
 
 $pageTitle = 'Student Portal | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202610291355', '../../css/student.css?v=202611041145'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611100055'];
 $extraJs = '../../js/student.js?v=202610291930';
 $bodyClass = 'admin-dashboard student-dashboard';
 $useVisualTheme = true;
@@ -168,8 +168,8 @@ $unreadAnnouncementsStmt = $pdo->prepare("
     )
       AND NOT EXISTS (
           SELECT 1
-          FROM student_announcement_reads sar
-          WHERE sar.announcement_id = a.id AND sar.student_id = :read_student_id
+          FROM user_announcement_reads sar
+          WHERE sar.announcement_id = a.id AND sar.user_id = :read_student_id
     ) AND {$announcementAudienceFilter}" . academicPeriodRecordFilter('a', 'a.created_at', 'unread') . "
 ");
 $unreadAnnouncementsStmt->execute(array_merge([
@@ -450,7 +450,7 @@ require_once '../../includes/header.php';
                                                 </td>
                                                 <td>
                                                     <form action="../../api/student_process.php" method="POST"
-                                                        onsubmit="return confirm('Withdraw or remove this course application?');">
+                                                        data-confirm-message="Withdraw or remove this course application?">
                                                         <input type="hidden" name="action" value="drop_course">
                                                         <input type="hidden" name="enrollment_id"
                                                             value="<?= $app['enrollment_id'] ?>">
@@ -496,38 +496,24 @@ require_once '../../includes/header.php';
 
                         <div class="card">
                             <div class="card-header">
-                                <div class="card-title">Edit Profile Information</div>
+                                <div class="card-title">Account Information</div>
                             </div>
-
-                            <form action="../../api/student_process.php" method="POST">
-                                <input type="hidden" name="action" value="update_profile">
-
-                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                                    <div class="form-group">
-                                        <label for="prof_fn">First Name *</label>
-                                        <input type="text" id="prof_fn" name="first_name" class="form-control"
-                                            placeholder="e.g. Juan"
-                                            value="<?= htmlspecialchars($currentUser['first_name']) ?>" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="prof_ln">Last Name *</label>
-                                        <input type="text" id="prof_ln" name="last_name" class="form-control"
-                                            placeholder="e.g. Dela Cruz"
-                                            value="<?= htmlspecialchars($currentUser['last_name']) ?>" required>
-                                    </div>
+                            <div class="student-account-details">
+                                <div>
+                                    <span>First name</span>
+                                    <strong><?= htmlspecialchars($currentUser['first_name'], ENT_QUOTES, 'UTF-8') ?></strong>
                                 </div>
-
-                                <div class="form-group">
-                                    <label for="prof_email">APEX Email</label>
-                                    <input type="email" id="prof_email" class="form-control"
-                                        value="<?= htmlspecialchars($currentUser['email']) ?>" disabled>
-                                    <small class="text-muted">Email address is managed by campus administration.</small>
+                                <div>
+                                    <span>Last name</span>
+                                    <strong><?= htmlspecialchars($currentUser['last_name'], ENT_QUOTES, 'UTF-8') ?></strong>
                                 </div>
-
-                                <button type="submit" class="btn btn-teal" style="margin-top:0.5rem;">
-                                    Save Profile Updates
-                                </button>
-                            </form>
+                                <div>
+                                    <span>APEX email</span>
+                                    <strong><?= htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                </div>
+                                <p>Your name and APEX email are managed by campus administration.</p>
+                                <a class="btn btn-primary" href="student_profile.php">Update profile picture</a>
+                            </div>
                         </div>
                     </div>
                 </div>

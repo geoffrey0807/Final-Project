@@ -16,6 +16,12 @@ VALUES
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 SET @migration_schema = DATABASE();
+SET @has_legacy_user_program = EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = @migration_schema
+            AND TABLE_NAME = 'users'
+            AND COLUMN_NAME = 'program'
+);
 SET @migration_sql = IF(
     EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = @migration_schema AND TABLE_NAME = 'users' AND COLUMN_NAME = 'department_id'),
     'DO 0',
@@ -89,36 +95,41 @@ JOIN programs AS program ON program.id = account.program_id
 SET account.department_id = program.department_id
 WHERE account.role IN ('dean', 'professor', 'student') AND account.department_id IS NULL;
 
-UPDATE users AS account
-JOIN programs AS program ON program.name = TRIM(account.program)
-SET account.program_id = program.id,
-    account.department_id = program.department_id
-WHERE account.role = 'student'
-  AND account.program_id IS NULL
-  AND account.program IS NOT NULL
-  AND program.is_active = 1;
+SET @migration_sql = IF(
+    @has_legacy_user_program,
+    'UPDATE users AS account JOIN programs AS program ON program.name = TRIM(account.program) SET account.program_id = program.id, account.department_id = program.department_id WHERE account.role = ''student'' AND account.program_id IS NULL AND account.program IS NOT NULL AND program.is_active = 1',
+    'DO 0'
+);
+PREPARE migration_statement FROM @migration_sql;
+EXECUTE migration_statement;
+DEALLOCATE PREPARE migration_statement;
 
-UPDATE users
-SET program_id = (SELECT id FROM programs WHERE code = 'BSCS'),
-    department_id = (SELECT department_id FROM programs WHERE code = 'BSCS')
-WHERE role = 'student' AND program_id IS NULL AND TRIM(COALESCE(program, '')) = 'Computer Science';
+SET @migration_sql = IF(
+    @has_legacy_user_program,
+    'UPDATE users SET program_id = (SELECT id FROM programs WHERE code = ''BSCS''), department_id = (SELECT department_id FROM programs WHERE code = ''BSCS'') WHERE role = ''student'' AND program_id IS NULL AND TRIM(COALESCE(program, '''')) = ''Computer Science''',
+    'DO 0'
+);
+PREPARE migration_statement FROM @migration_sql;
+EXECUTE migration_statement;
+DEALLOCATE PREPARE migration_statement;
 
-UPDATE users
-SET program_id = (SELECT id FROM programs WHERE code = 'BSIT'),
-    department_id = (SELECT department_id FROM programs WHERE code = 'BSIT')
-WHERE role = 'student' AND program_id IS NULL AND TRIM(COALESCE(program, '')) = 'Information Technology';
+SET @migration_sql = IF(
+    @has_legacy_user_program,
+    'UPDATE users SET program_id = (SELECT id FROM programs WHERE code = ''BSIT''), department_id = (SELECT department_id FROM programs WHERE code = ''BSIT'') WHERE role = ''student'' AND program_id IS NULL AND TRIM(COALESCE(program, '''')) = ''Information Technology''',
+    'DO 0'
+);
+PREPARE migration_statement FROM @migration_sql;
+EXECUTE migration_statement;
+DEALLOCATE PREPARE migration_statement;
 
-UPDATE users
-SET department_id = CASE
-    WHEN TRIM(COALESCE(program, '')) IN ('Computer Science', 'BSCS', 'GPMC')
-        THEN (SELECT id FROM departments WHERE code = 'DSCS')
-    WHEN TRIM(COALESCE(program, '')) IN ('Information Technology', 'BSIT', 'ADFSWD')
-        THEN (SELECT id FROM departments WHERE code = 'DISWT')
-    WHEN TRIM(COALESCE(program, '')) IN ('BSSE', 'BSMAD')
-        THEN (SELECT id FROM departments WHERE code = 'DSEAD')
-    ELSE department_id
-END
-WHERE role IN ('dean', 'professor') AND department_id IS NULL;
+SET @migration_sql = IF(
+    @has_legacy_user_program,
+    'UPDATE users SET department_id = CASE WHEN TRIM(COALESCE(program, '''')) IN (''Computer Science'', ''BSCS'', ''GPMC'') THEN (SELECT id FROM departments WHERE code = ''DSCS'') WHEN TRIM(COALESCE(program, '''')) IN (''Information Technology'', ''BSIT'', ''ADFSWD'') THEN (SELECT id FROM departments WHERE code = ''DISWT'') WHEN TRIM(COALESCE(program, '''')) IN (''BSSE'', ''BSMAD'') THEN (SELECT id FROM departments WHERE code = ''DSEAD'') ELSE department_id END WHERE role IN (''dean'', ''professor'') AND department_id IS NULL',
+    'DO 0'
+);
+PREPARE migration_statement FROM @migration_sql;
+EXECUTE migration_statement;
+DEALLOCATE PREPARE migration_statement;
 
 UPDATE users SET program_id = NULL WHERE role IN ('dean', 'professor');
 
@@ -126,6 +137,24 @@ UPDATE users AS account
 JOIN programs AS program ON program.id = account.program_id
 SET account.department_id = program.department_id
 WHERE account.role = 'student' AND account.department_id IS NULL;
+
+SET @migration_sql = IF(
+    @has_legacy_user_program,
+    'SELECT COUNT(*) INTO @unmapped_legacy_programs FROM users WHERE program IS NOT NULL AND TRIM(program) <> '''' AND ((role = ''student'' AND program_id IS NULL) OR (role IN (''dean'', ''professor'') AND department_id IS NULL) OR role NOT IN (''student'', ''dean'', ''professor''))',
+    'SELECT 0 INTO @unmapped_legacy_programs'
+);
+PREPARE migration_statement FROM @migration_sql;
+EXECUTE migration_statement;
+DEALLOCATE PREPARE migration_statement;
+
+SET @migration_sql = IF(
+    @has_legacy_user_program AND @unmapped_legacy_programs = 0,
+    'ALTER TABLE users DROP COLUMN program',
+    'DO 0'
+);
+PREPARE migration_statement FROM @migration_sql;
+EXECUTE migration_statement;
+DEALLOCATE PREPARE migration_statement;
 
 SET @migration_sql = IF(
     EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = @migration_schema AND TABLE_NAME = 'users' AND INDEX_NAME = 'idx_users_department_role'),

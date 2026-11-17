@@ -39,7 +39,7 @@ if (!$course) {
 }
 
 $assessmentStmt = $pdo->prepare("
-    SELECT id, title, description, term, assessment_type, question_format, total_points, deadline, time_limit_minutes
+    SELECT id, title, description, term, assessment_type, question_format, total_points, deadline, time_limit_minutes, is_draft
     FROM assessments
     WHERE id = :assessment_id
       AND course_id = :course_id
@@ -62,14 +62,15 @@ $deadlinePassed = new DateTimeImmutable(
     (string) $assessment['deadline'],
     new DateTimeZone('Asia/Manila')
 ) <= new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'));
-$editUnavailable = $mode === 'edit' && !$deadlinePassed;
+$assessmentIsDraft = !empty($assessment['is_draft']);
+$editUnavailable = $mode === 'edit' && !$deadlinePassed && !$assessmentIsDraft;
 if ($editUnavailable) {
     http_response_code(403);
     $mode = 'view';
 }
 
 $questionsStmt = $pdo->prepare("
-    SELECT id, question_text, question_type, choices_json, correct_answer,
+    SELECT id, question_text, image_path, question_type, choices_json, correct_answer,
            points, question_order
     FROM assessment_questions
     WHERE assessment_id = :assessment_id
@@ -79,7 +80,7 @@ $questionsStmt->execute(['assessment_id' => $assessmentId]);
 $questions = $questionsStmt->fetchAll();
 
 $pageTitle = htmlspecialchars($assessment['title'], ENT_QUOTES, 'UTF-8') . ' | ' . $course['course_code'];
-$extraCss = ['../../css/admin.css?v=202611062930', '../../css/student.css?v=202611061730'];
+$extraCss = ['../../css/admin.css?v=202611101741', '../../css/student.css?v=202611061730'];
 $bodyClass = 'admin-dashboard student-dashboard professor-portal professor-course-page';
 $useVisualTheme = true;
 $professorView = 'classes';
@@ -96,19 +97,27 @@ require_once '../../includes/header.php';
                 <div>
                     <span class="professor-course-badge"><?= htmlspecialchars($course['course_code'], ENT_QUOTES, 'UTF-8') ?></span>
                     <h1><?= htmlspecialchars($assessment['title'], ENT_QUOTES, 'UTF-8') ?></h1>
-                    <p><?= htmlspecialchars($assessment['term'], ENT_QUOTES, 'UTF-8') ?> ·
-                        <?= htmlspecialchars($assessment['assessment_type'], ENT_QUOTES, 'UTF-8') ?> ·
-                        <?= number_format((float) $assessment['total_points'], 0) ?> points ·
-                        <?= $assessment['time_limit_minutes'] === null ? 'No time limit' : (int) $assessment['time_limit_minutes'] . ' minute limit' ?> ·
-                        Due <?= htmlspecialchars(date('M j, Y g:i A', strtotime($assessment['deadline'])), ENT_QUOTES, 'UTF-8') ?></p>
+                    <div class="professor-assessment-meta" aria-label="Assessment details">
+                        <span><?= htmlspecialchars($assessment['term'], ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><?= htmlspecialchars($assessment['assessment_type'], ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><?= number_format((float) $assessment['total_points'], 0) ?> points</span>
+                        <span><?= $assessment['time_limit_minutes'] === null ? 'No time limit' : (int) $assessment['time_limit_minutes'] . ' minute limit' ?></span>
+                        <span>Due <?= htmlspecialchars(date('M j, Y g:i A', strtotime($assessment['deadline'])), ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
                 </div>
-                <?php if ($mode === 'view' && $deadlinePassed): ?>
+                <?php if ($assessmentIsDraft): ?>
+                    <span class="professor-assessment-draft-badge">Draft · not visible to students</span>
+                <?php endif; ?>
+                <?php if ($mode === 'view' && ($deadlinePassed || $assessmentIsDraft)): ?>
                     <a class="professor-assessment-view-link"
                         href="professor_assessment.php?course_id=<?= (int) $courseId ?>&amp;assessment_id=<?= (int) $assessmentId ?>&amp;mode=edit">Edit</a>
                 <?php endif; ?>
             </header>
             <?php if ($editUnavailable): ?>
                 <p class="professor-assessment-readonly-note">Editing is available after the assessment deadline.</p>
+            <?php endif; ?>
+            <?php if ($mode === 'edit' && $assessmentIsDraft): ?>
+                <p class="professor-assessment-readonly-note">This draft is hidden from students until question points add up to the assessment total.</p>
             <?php endif; ?>
             <?php if ($assessment['description'] !== ''): ?>
                 <p class="professor-assessment-description"><?= nl2br(htmlspecialchars($assessment['description'], ENT_QUOTES, 'UTF-8')) ?></p>
@@ -127,6 +136,11 @@ require_once '../../includes/header.php';
                                 value="<?= htmlspecialchars($assessment['title'], ENT_QUOTES, 'UTF-8') ?>">
                         </label>
                         <label>
+                            Total points
+                            <input type="number" name="total_points" min="0.01" max="100000" step="0.01" required
+                                value="<?= htmlspecialchars((string) $assessment['total_points'], ENT_QUOTES, 'UTF-8') ?>">
+                        </label>
+                        <label>
                             Description / guidelines
                             <textarea name="description" maxlength="10000" rows="3"><?= htmlspecialchars($assessment['description'], ENT_QUOTES, 'UTF-8') ?></textarea>
                         </label>
@@ -142,9 +156,14 @@ require_once '../../includes/header.php';
                         $choices = json_decode((string) $question['choices_json'], true) ?: [];
                         $correctChoice = array_search($question['correct_answer'], $choices, true);
                         ?>
-                        <fieldset class="professor-assessment-question-edit">
-                            <legend>Question <?= $index + 1 ?></legend>
+                        <article class="professor-assessment-question-edit">
+                            <h2 class="professor-assessment-question-edit-heading">Question <?= $index + 1 ?></h2>
                             <input type="hidden" name="questions[<?= $index ?>][id]" value="<?= (int) $question['id'] ?>">
+                            <?php if (!empty($question['image_path'])): ?>
+                                <img class="assessment-question-context-image"
+                                    src="../../<?= htmlspecialchars($question['image_path'], ENT_QUOTES, 'UTF-8') ?>"
+                                    alt="Question visual context" loading="lazy" decoding="async">
+                            <?php endif; ?>
                             <label>
                                 Question / problem
                                 <textarea name="questions[<?= $index ?>][question_text]" maxlength="10000" rows="3" required><?= htmlspecialchars($question['question_text'], ENT_QUOTES, 'UTF-8') ?></textarea>
@@ -166,7 +185,7 @@ require_once '../../includes/header.php';
                                                 value="<?= htmlspecialchars((string) ($choices[$choiceIndex] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                                         </label>
                                     <?php endforeach; ?>
-                                </fieldset>
+                                </article>
                             <?php elseif ($question['question_type'] === 'true_false'): ?>
                                 <label>
                                     Correct answer
@@ -181,12 +200,17 @@ require_once '../../includes/header.php';
                     <div class="professor-assessment-edit-actions">
                         <a class="professor-assessment-view-link"
                             href="professor_assessment.php?course_id=<?= (int) $courseId ?>&amp;assessment_id=<?= (int) $assessmentId ?>&amp;mode=view">Cancel</a>
-                        <button class="professor-course-action-button" type="submit">Save Changes</button>
+                        <button class="professor-course-action-button" type="submit"><?= $assessmentIsDraft ? 'Save Draft / Publish When Valid' : 'Save Changes' ?></button>
                     </div>
                 </form>
             <?php else: ?>
                 <?php if (!$questions): ?>
                     <p class="student-empty-note">This assessment has no questions.</p>
+                <?php else: ?>
+                    <div class="professor-assessment-question-list-heading">
+                        <h2>Assessment questions</h2>
+                        <span><?= count($questions) ?> <?= count($questions) === 1 ? 'question' : 'questions' ?></span>
+                    </div>
                 <?php endif; ?>
                 <div class="professor-assessment-question-list-readonly">
                     <?php foreach ($questions as $index => $question): ?>
@@ -199,6 +223,11 @@ require_once '../../includes/header.php';
                                 <span><?= number_format((float) $question['points'], 0) ?> points</span>
                             </header>
                             <p><?= nl2br(htmlspecialchars($question['question_text'], ENT_QUOTES, 'UTF-8')) ?></p>
+                            <?php if (!empty($question['image_path'])): ?>
+                                <img class="assessment-question-context-image"
+                                    src="../../<?= htmlspecialchars($question['image_path'], ENT_QUOTES, 'UTF-8') ?>"
+                                    alt="Question visual context" loading="lazy" decoding="async">
+                            <?php endif; ?>
                             <?php if ($question['question_type'] === 'multiple_choice'): ?>
                                 <ul>
                                     <?php foreach ($choices as $choice): ?>

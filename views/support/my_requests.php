@@ -8,7 +8,7 @@ require_once '../../includes/portal_pagination.php';
 $role = $_SESSION['role'];
 $supportRequestCsrfToken = $_SESSION['support_request_csrf'] ??= bin2hex(random_bytes(32));
 $pageTitle = 'My Support Requests | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611031950', '../../css/student.css?v=202610292224', '../../css/portal-layout.css?v=202611041304'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202610292224', '../../css/portal-layout.css?v=202611041304'];
 $bodyClass = 'admin-dashboard student-dashboard support-requests-portal';
 $useVisualTheme = true;
 $hideSharedSearch = true;
@@ -68,7 +68,7 @@ require_once '../../includes/header.php';
     ?>
     <div class="student-dashboard-content container">
         <div class="support-request-page-actions">
-            <a class="btn btn-primary support-request-assistant-link" data-support-logout-link
+            <a class="btn btn-primary support-request-assistant-link" data-confirm-message="You need to sign out before opening public support. Continue?"
                 href="../../auth/logout.php?destination=homepage-chat">Open support assistant</a>
             <?php if ($requests): ?>
                 <form class="support-request-delete-form" id="deleteSupportRequestsForm"

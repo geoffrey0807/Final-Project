@@ -1,5 +1,8 @@
 <?php if (!empty($useVisualTheme)): ?>
     </main>
+    <?php if (isset($_SESSION['user_id']) && in_array($activeUserRole, ['admin', 'registrar', 'dean', 'professor', 'student'], true)): ?>
+        <?php require __DIR__ . '/academic_period_dialog.php'; ?>
+    <?php endif; ?>
     <?php
     $visualBase = $siteRootPath ?? '../';
     $visualBase .= 'visual/';
@@ -11,8 +14,11 @@
     <?php
     endif;
     ?>
-    <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/portal-layout.js?v=202611032311') ?>"></script>
-    <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/academic-year.js?v=202611071845') ?>"></script>
+    <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/portal-layout.js?v=202611092126') ?>"></script>
+    <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/academic-year.js?v=202611101515') ?>"></script>
+    <?php if (!empty($mobileNavigationEnabled)): ?>
+        <script src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/mobile-nav.js?v=202611101725') ?>"></script>
+    <?php endif; ?>
     <script
         src="<?= htmlspecialchars(($siteRootPath ?? '../') . 'js/announcement-attachments.js?v=202611062030') ?>"></script>
     <?php if ($registrarAnnouncementGate !== null): ?>

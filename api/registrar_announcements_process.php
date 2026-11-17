@@ -166,7 +166,9 @@ if ($action === 'publish') {
         $respond(false, 'The announcement could not be published. Please try again.');
     }
 
-    $respond(true, 'Announcement published successfully.');
+    $respond(true, $isHomepageNotice
+        ? 'Homepage notice published and added to the public homepage.'
+        : 'Announcement published to its selected portal audience. It was not added to the public homepage.');
 }
 
 if ($action === 'update') {
@@ -340,7 +342,9 @@ if ($action === 'update') {
         }
     }
 
-    $respond(true, 'Announcement updated successfully.');
+    $respond(true, $isHomepageNotice
+        ? 'Homepage notice updated on the public homepage.'
+        : 'Announcement updated. It is not displayed on the public homepage.');
 }
 
 if ($action === 'delete') {

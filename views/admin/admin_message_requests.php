@@ -7,7 +7,7 @@ require_once '../../includes/portal_notification_counts.php';
 require_once '../../includes/portal_pagination.php';
 
 $pageTitle = 'Message Requests | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611031950', '../../css/student.css?v=202610292224', '../../css/portal-layout.css?v=202611041318'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202610292224', '../../css/portal-layout.css?v=202611041318'];
 $extraJs = '../../js/admin.js?v=202611031950';
 $bodyClass = 'admin-dashboard student-dashboard admin-portal';
 $useVisualTheme = true;

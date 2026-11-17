@@ -45,20 +45,6 @@ DEALLOCATE PREPARE migration_statement;
 
 SET @migration_sql = IF(
     EXISTS (
-        SELECT 1 FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = @migration_schema
-          AND TABLE_NAME = 'users'
-          AND COLUMN_NAME = 'program'
-    ),
-    'DO 0',
-    'ALTER TABLE users ADD COLUMN program VARCHAR(150) NULL AFTER id_number'
-);
-PREPARE migration_statement FROM @migration_sql;
-EXECUTE migration_statement;
-DEALLOCATE PREPARE migration_statement;
-
-SET @migration_sql = IF(
-    EXISTS (
         SELECT 1 FROM information_schema.STATISTICS
         WHERE TABLE_SCHEMA = @migration_schema
           AND TABLE_NAME = 'users'

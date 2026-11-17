@@ -3,6 +3,12 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    const showProfileError = (message) => {
+        window.dispatchEvent(new CustomEvent('apex:toast', {
+            detail: { message, type: 'error' }
+        }));
+    };
+
     // -------------------------------------------------------------
     // 1. Profile Photo Selection & Live Image Preview
     // -------------------------------------------------------------
@@ -12,14 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const photoFallbackSvg = document.querySelector('[data-profile-photo-fallback]');
     const revertBtn = document.querySelector('[data-profile-photo-revert]');
     const photoStatus = document.querySelector('[data-photo-status]');
-    const removePhotoBtn = document.querySelector('[data-profile-photo-remove]');
-
-    removePhotoBtn?.addEventListener('click', (event) => {
-        if (!window.confirm('Remove your current profile photo?')) {
-            event.preventDefault();
-        }
-    });
-
     // Remember initial state
     const originalPhotoUrl = previewImg ? previewImg.getAttribute('src') || '' : '';
     const hadOriginalPhoto = originalPhotoUrl !== '';
@@ -48,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Client-side validation: Type
             const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
             if (!validTypes.includes(file.type)) {
-                alert('Please choose a valid JPG, PNG, or WebP image.');
+                showProfileError('Please choose a valid JPG, PNG, or WebP image.');
                 resetPhotoSelection();
                 return;
             }
@@ -56,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Client-side validation: Size (max 5 MB)
             const maxSize = 5 * 1024 * 1024;
             if (file.size > maxSize) {
-                alert('Please choose an image smaller than 5 MB.');
+                showProfileError('Please choose an image smaller than 5 MB.');
                 resetPhotoSelection();
                 return;
             }
@@ -227,21 +225,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!currentPass) {
                 e.preventDefault();
-                alert('Please enter your current password.');
+                showProfileError('Please enter your current password.');
                 document.getElementById('currentPassword')?.focus();
                 return;
             }
 
             if (!checkPasswordRequirements(newPass)) {
                 e.preventDefault();
-                alert('Your new password must be at least 8 characters long and include an uppercase letter (title case), a lowercase letter, a number, and a special character.');
+                showProfileError('Your new password must be at least 8 characters long and include an uppercase letter (title case), a lowercase letter, a number, and a special character.');
                 newPasswordInput?.focus();
                 return;
             }
 
             if (newPass !== confirmPass) {
                 e.preventDefault();
-                alert('Your new password and confirmation password do not match.');
+                showProfileError('Your new password and confirmation password do not match.');
                 confirmPasswordInput?.focus();
                 return;
             }
@@ -250,21 +248,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const infoForm = document.getElementById('portalProfileInfoForm');
     if (infoForm) {
-        infoForm.addEventListener('submit', (e) => {
-            const firstName = document.getElementById('profileFirstName')?.value.trim() || '';
-            const lastName = document.getElementById('profileLastName')?.value.trim() || '';
-            const email = document.getElementById('profileEmail')?.value.trim() || '';
-
-            if (!firstName || !lastName) {
-                e.preventDefault();
-                alert('Please enter both your first and last name.');
+        infoForm.addEventListener('submit', (event) => {
+            if (event.submitter?.hasAttribute('data-profile-photo-remove')) {
                 return;
             }
-
-            if (!email || !email.endsWith('@apex.edu.ph')) {
-                e.preventDefault();
-                alert('Please enter a valid official APEX email ending in @apex.edu.ph.');
-                return;
+            if (!photoInput?.files?.length) {
+                event.preventDefault();
+                showProfileError('Choose a profile picture to upload.');
+                avatarPreviewWrap?.focus();
             }
         });
     }

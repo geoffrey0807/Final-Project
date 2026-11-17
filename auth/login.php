@@ -86,14 +86,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In • APEX Learning Hub</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg?v=202611100755">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css?v=202611041145">
-    <link rel="stylesheet" href="../visual/css/visual.css?v=202611041145">
+    <link rel="stylesheet" href="../visual/css/visual.css?v=202611100020">
     <link rel="stylesheet" href="../css/auth.css">
-    <link rel="stylesheet" href="../css/auth-portal.css">
+    <link rel="stylesheet" href="../css/auth-portal.css?v=202611100910">
     <link rel="stylesheet" href="../css/portal-toast.css">
     <style>
         .form-group {

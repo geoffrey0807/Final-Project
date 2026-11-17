@@ -96,7 +96,7 @@ if ($announcements) {
 }
 
 $pageTitle = 'Announcements | APEX Learning Hub';
-$extraCss = ['../css/admin.css?v=202611031950', '../css/student.css?v=202611041602'];
+$extraCss = ['../css/admin.css?v=202611100730', '../css/student.css?v=202611041602'];
 $bodyClass = 'admin-dashboard student-dashboard announcements-portal';
 $useVisualTheme = true;
 $hideSharedSearch = true;

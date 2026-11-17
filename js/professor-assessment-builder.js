@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.querySelector("#courseAssessmentForm");
   const questionList = form?.querySelector("[data-assessment-question-list]");
+  const modalBody = form?.querySelector(".course-assessment-modal-body");
   const questionTemplate = document.querySelector(
     "#courseAssessmentQuestionTemplate",
   );
@@ -143,6 +144,20 @@ document.addEventListener("DOMContentLoaded", () => {
     ).textContent = `Question ${questionList.children.length + 1}`;
     questionList.append(question);
     updateQuestion(questionList.lastElementChild);
+    window.requestAnimationFrame(() => {
+      if (!modalBody?.clientHeight) return;
+      const buttonBottom = addQuestionButton.getBoundingClientRect().bottom;
+      const bodyBottom = modalBody.getBoundingClientRect().bottom;
+      const nextScrollTop = modalBody.scrollTop + buttonBottom - bodyBottom;
+      if (nextScrollTop <= modalBody.scrollTop) return;
+
+      modalBody.scrollTo({
+        top: nextScrollTop,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+      });
+    });
   };
 
   addQuestionButton.addEventListener("click", addQuestion);

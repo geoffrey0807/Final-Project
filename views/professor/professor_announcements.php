@@ -35,7 +35,7 @@ $announcements = $announcementStmt->fetchAll();
 
 $professorView = 'announcements';
 $pageTitle = 'Class Announcements | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611061140', '../../css/student.css?v=202611020900'];
+$extraCss = ['../../css/admin.css?v=202611100730', '../../css/student.css?v=202611020900'];
 $extraJs = ['../../js/admin.js?v=202611010115', '../../js/student.js?v=202610301825'];
 $bodyClass = 'admin-dashboard student-dashboard professor-portal';
 $useVisualTheme = true;

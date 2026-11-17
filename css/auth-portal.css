@@ -1,8 +1,8 @@
-.auth-page {
+﻿.auth-page {
     display: block;
     padding: 0;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 236, 240, 0.22) 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(251, 232, 238, 0.22) 100%),
         url('../bgimage/APEX Learning Hub.png') center / cover fixed no-repeat;
 }
 
@@ -25,13 +25,18 @@
     min-height: 520px;
     position: relative;
     isolation: isolate;
-    background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 226, 233, 0.58)),
-        url('../bgimage/APEX Learning Hub.png') 52% 48% / cover no-repeat;
-    border: 1px solid rgba(255, 255, 255, 0.92);
+    background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.38),
+        rgba(255, 255, 255, 0.2)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.68);
+    border-radius: 24px;
+    backdrop-filter: blur(24px) saturate(145%);
+    -webkit-backdrop-filter: blur(24px) saturate(145%);
     box-shadow:
-        0 24px 70px rgba(126, 54, 74, 0.16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        0 24px 70px rgba(126, 54, 74, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
     grid-template-columns: 1fr;
 }
 
@@ -43,12 +48,12 @@
     position: relative;
     z-index: 1;
     padding: 2rem;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(2px);
+    background: transparent;
+    backdrop-filter: none;
 }
 
 .auth-page .auth-form-header h1 {
-    color: #d98596;
+    color: #c73659;
     font-size: 2.75rem;
     font-weight: 800;
     line-height: 1.2;
@@ -56,13 +61,13 @@
 
 .auth-page .auth-form-header p {
     margin-top: 0.5rem;
-    color: #64748b;
+    color: #705d65;
     font-size: 1.25rem;
     line-height: 1.6;
 }
 
 .auth-page .form-group label {
-    color: #d98596;
+    color: #c73659;
     font-weight: 600;
 }
 
@@ -70,29 +75,29 @@
     height: 48px;
     border-color: rgba(148, 163, 184, 0.55);
     background: rgba(255, 255, 255, 0.82);
-    box-shadow: 0 5px 18px rgba(217, 133, 150, 0.035);
+    box-shadow: 0 5px 18px rgba(112, 38, 59, 0.035);
 }
 
 .auth-page .form-control:focus {
-    border-color: rgba(230, 161, 174, 0.58);
+    border-color: rgba(199, 54, 89, 0.58);
     background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 0 0 3px rgba(230, 161, 174, 0.1);
+    box-shadow: 0 0 0 3px rgba(199, 54, 89, 0.1);
     outline: none;
 }
 
 .auth-page .btn-primary {
     width: 100%;
     padding: 0.8rem;
-    background: linear-gradient(135deg, #df8d9d, #e6a1ae);
-    border: 1px solid #df8d9d;
+    background: linear-gradient(135deg, #a52d4a, #d94f70);
+    border: 1px solid #a52d4a;
     color: #fff;
-    box-shadow: 0 4px 14px rgba(223, 141, 157, 0.24);
+    box-shadow: 0 4px 14px rgba(199, 54, 89, 0.24);
 }
 
 .auth-page .btn-primary:hover {
-    background: linear-gradient(135deg, #e6a1ae, #efb4be);
+    background: linear-gradient(135deg, #d94f70, #d94f70);
     color: #fff;
-    box-shadow: 0 6px 18px rgba(223, 141, 157, 0.32);
+    box-shadow: 0 6px 18px rgba(199, 54, 89, 0.32);
 }
 
 @media (max-width: 640px) {
@@ -100,3 +105,5 @@
         font-size: 2rem;
     }
 }
+
+

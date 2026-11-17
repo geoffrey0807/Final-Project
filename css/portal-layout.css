@@ -1,4 +1,4 @@
-.student-dashboard-shell {
+﻿.student-dashboard-shell {
   width: min(1920px, calc(100% - 24px));
   padding-top: 1.25rem;
   gap: 0.6rem;
@@ -16,7 +16,7 @@
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.92);
   border-radius: 18px;
-  background: #fffafb;
+  background: #fff5f5;
   color: #475569;
   box-shadow: 0 24px 70px rgba(90, 50, 60, 0.28);
 }
@@ -32,7 +32,7 @@
 
 .student-fiscal-year-confirm h2 {
   margin: 0;
-  color: #d98596;
+  color: #c73659;
   font-size: 1.2rem;
 }
 
@@ -61,7 +61,7 @@
 .portal-icon-rail {
   position: sticky;
   top: 72px;
-  align-self: stretch;
+  align-self: start;
   z-index: 20;
   grid-column: 1;
   display: grid;
@@ -73,7 +73,7 @@
   border: 1px solid rgba(255, 255, 255, 0.86);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 10px 24px rgba(217, 133, 150, 0.08);
+  box-shadow: 0 10px 24px rgba(112, 38, 59, 0.08);
   backdrop-filter: blur(14px) saturate(145%);
   -webkit-backdrop-filter: blur(14px) saturate(145%);
 }
@@ -87,7 +87,7 @@
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #64748b;
+  color: #705d65;
   cursor: pointer;
   text-decoration: none;
   transition:
@@ -97,8 +97,8 @@
 
 .portal-icon-button:hover,
 .portal-icon-button:focus-visible {
-  background: rgba(255, 228, 233, 0.82);
-  color: #d98596;
+  background: rgba(251, 232, 238, 0.82);
+  color: #c73659;
   outline: none;
 }
 
@@ -114,7 +114,8 @@
 
 .student-dashboard-shell .student-sidebar {
   grid-column: 2;
-  align-self: stretch;
+  align-self: start;
+  height: max-content;
   padding: 0.75rem;
   border-radius: 10px;
 }
@@ -158,7 +159,7 @@
   padding: 0 0.28rem;
   border: 1px solid #fff;
   border-radius: 999px;
-  background: #e5484d;
+  background: #c73659;
   color: #fff;
   font-size: 0.68rem;
   font-weight: 800;
@@ -188,9 +189,11 @@
 }
 
 .portal-icon-rail .student-profile-trigger {
+  display: grid;
   width: 42px;
   height: 42px;
-  padding: 0;
+  min-height: 42px !important;
+  padding: 0 !important;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -200,7 +203,7 @@
 .portal-icon-rail .student-profile-trigger:hover,
 .portal-icon-rail .student-profile-trigger[aria-expanded="true"] {
   border: 0;
-  background: rgba(255, 228, 233, 0.82);
+  background: rgba(251, 232, 238, 0.82);
   box-shadow: none;
 }
 
@@ -208,6 +211,39 @@
 .portal-icon-rail .profile-avatar-wrap .avatar-circle {
   width: 34px;
   height: 34px;
+}
+
+.portal-icon-rail .profile-avatar-wrap {
+  display: flex;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+}
+
+.portal-icon-rail .profile-avatar-wrap .avatar-circle,
+.portal-icon-rail
+  .student-profile-trigger:hover
+  .profile-avatar-wrap
+  .avatar-circle,
+.portal-icon-rail
+  .student-profile-trigger[aria-expanded="true"]
+  .profile-avatar-wrap
+  .avatar-circle {
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  line-height: 1;
+  text-align: center;
+  text-indent: 0;
+  letter-spacing: 0;
 }
 
 .portal-icon-rail .portal-avatar-photo {
@@ -226,33 +262,45 @@
 
 .dashboard-announcements {
   grid-column: 4;
+  display: flex;
+  height: 34rem;
+  max-height: calc(100vh - 100px);
   min-width: 0;
-  align-self: stretch;
+  min-height: 0;
+  flex-direction: column;
+  align-self: start;
+  box-sizing: border-box;
+  overflow: hidden;
   padding: 0.8rem;
   border: 1px solid rgba(255, 255, 255, 0.86);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 10px 24px rgba(217, 133, 150, 0.08);
+  box-shadow: 0 10px 24px rgba(112, 38, 59, 0.08);
   backdrop-filter: blur(14px) saturate(145%);
   -webkit-backdrop-filter: blur(14px) saturate(145%);
 }
 
 .dashboard-announcements h2 {
   margin: 0 0 0.8rem;
-  color: #d98596;
+  color: #c73659;
   font-size: 0.95rem;
 }
 
 .dashboard-announcement-list {
   display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
   gap: 0.7rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.2rem;
 }
 
 .dashboard-announcement-item {
   display: grid;
   gap: 0.35rem;
   padding: 0 0 0.7rem;
-  border-bottom: 1px solid rgba(217, 133, 150, 0.14);
+  border-bottom: 1px solid rgba(112, 38, 59, 0.14);
   color: #475569;
   text-decoration: none;
 }
@@ -269,14 +317,14 @@
 
 .dashboard-announcement-item small {
   margin: 0;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.7rem;
   line-height: 1.4;
 }
 
 .dashboard-announcement-item p {
   margin: 0;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.72rem;
   line-height: 1.45;
   white-space: pre-line;
@@ -285,7 +333,7 @@
 .student-announcement-bulletin {
   align-items: stretch;
   border: 0;
-  border-bottom: 1px solid rgba(217, 133, 150, 0.18);
+  border-bottom: 1px solid rgba(112, 38, 59, 0.18);
   border-radius: 0;
   background: transparent;
   padding: 0 0 0.7rem;
@@ -309,19 +357,19 @@
 
 .student-announcement-bulletin p {
   margin: 0;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.75rem;
   line-height: 1.5;
   white-space: pre-line;
 }
 
 .dashboard-announcement-item:hover strong {
-  color: #d98596;
+  color: #c73659;
 }
 
 .dashboard-announcement-empty {
   margin: 0;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.8rem;
 }
 
@@ -380,7 +428,7 @@
 }
 .portal-people-search-heading h2 {
   margin: 0;
-  color: #d98596;
+  color: #c73659;
   font-size: 0.9rem;
 }
 .portal-people-search-back {
@@ -392,13 +440,13 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #64748b;
+  color: #705d65;
   cursor: pointer;
 }
 .portal-people-search-back:hover,
 .portal-people-search-back:focus-visible {
-  background: rgba(255, 228, 233, 0.82);
-  color: #d98596;
+  background: rgba(251, 232, 238, 0.82);
+  color: #c73659;
 }
 .portal-people-search-back svg,
 .portal-people-search-field svg {
@@ -416,14 +464,14 @@
   gap: 0.5rem;
   min-height: 40px;
   padding: 0 0.65rem;
-  border: 1px solid rgba(217, 133, 150, 0.25);
+  border: 1px solid rgba(112, 38, 59, 0.25);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.88);
-  color: #64748b;
+  color: #705d65;
 }
 .portal-people-search-field:focus-within {
-  border-color: #d98596;
-  box-shadow: 0 0 0 2px rgba(217, 133, 150, 0.12);
+  border-color: #c73659;
+  box-shadow: 0 0 0 2px rgba(112, 38, 59, 0.12);
 }
 .portal-people-search-field input {
   width: 100%;
@@ -439,7 +487,7 @@
 .portal-people-search-scope,
 .portal-people-search-message {
   margin: 0;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.72rem;
   line-height: 1.4;
 }
@@ -455,16 +503,16 @@
   display: grid;
   gap: 0.2rem;
   padding: 0.6rem 0;
-  border-bottom: 1px solid rgba(217, 133, 150, 0.14);
+  border-bottom: 1px solid rgba(112, 38, 59, 0.14);
   color: inherit;
   text-decoration: none;
 }
 .portal-people-search-result:hover {
-  background: rgba(255, 228, 233, 0.55);
+  background: rgba(251, 232, 238, 0.55);
 }
 .portal-people-search-result:focus-visible {
-  background: rgba(255, 228, 233, 0.55);
-  outline: 2px solid #d98596;
+  background: rgba(251, 232, 238, 0.55);
+  outline: 2px solid #c73659;
   outline-offset: -2px;
 }
 .portal-people-search-result strong {
@@ -476,7 +524,7 @@
 .portal-people-search-result p,
 .portal-people-search-result small {
   margin: 0;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.68rem;
 }
 .portal-people-search-result .portal-people-search-identifier {
@@ -509,7 +557,7 @@
 }
 .portal-table-sort-indicator {
   flex: 0 0 auto;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.78em;
   line-height: 1;
 }
@@ -518,6 +566,19 @@
   font-weight: 700;
   white-space: nowrap;
 }
+
+.assessment-question-context-image {
+  display: block;
+  max-width: 100%;
+  max-height: min(55vh, 32rem);
+  margin: 0.75rem 0 1rem;
+  border: 1px solid rgba(199, 54, 89, 0.2);
+  border-radius: 8px;
+  background: #fff;
+  object-fit: contain;
+  object-position: left center;
+}
+
 .table-responsive:has(> .admin-user-table) {
   overflow-x: hidden;
 }
@@ -691,7 +752,7 @@
   justify-content: space-between;
   gap: 0.75rem;
   margin: 0.45rem 0;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.78rem;
 }
 .dean-professor-id strong {
@@ -702,25 +763,57 @@
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
   background: rgba(100, 116, 139, 0.1);
-  color: #64748b;
+  color: #705d65;
   font-size: 0.62rem;
   font-weight: 700;
 }
 .portal-people-search-status.status-active {
   background: rgba(13, 148, 136, 0.1);
-  color: #0f766e;
+  color: #a52d4a;
 }
 .portal-people-search-status.status-disabled {
-  background: rgba(217, 133, 150, 0.13);
+  background: rgba(112, 38, 59, 0.13);
   color: #b45368;
+}
+
+:is(
+  .grade-status-pill,
+  .admin-status-pill,
+  .portal-people-search-status,
+  .badge-approved,
+  .badge-pending,
+  .badge-rejected
+) {
+  display: inline-flex !important;
+  min-height: 1.65rem !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.25rem 0.65rem !important;
+  border: 1px solid transparent;
+  border-radius: 999px !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.student-grade-overview-card > strong:not(.grade-status-pill) {
+  color: #c73659;
+  font-size: 1.35rem;
+}
+
+.student-grade-overview-card > strong.grade-status-pill {
+  font-size: 0.72rem;
+  line-height: 1.2;
 }
 tr[id^="user-"]:target,
 .dean-professor-card[id^="user-"]:target,
 tr[id^="student-"]:target {
   scroll-margin-top: 1.5rem;
-  outline: 2px solid rgba(217, 133, 150, 0.65);
+  outline: 2px solid rgba(112, 38, 59, 0.65);
   outline-offset: -2px;
-  background: rgba(255, 228, 233, 0.55);
+  background: rgba(251, 232, 238, 0.55);
 }
 .student-dashboard-layout,
 .admin-dashboard-layout,
@@ -739,19 +832,28 @@ tr[id^="student-"]:target {
 
 .academic-period-line {
   margin: 0.2rem 0 0;
-  color: #684052;
+  color: #7f2339;
   font-size: 0.82rem;
 }
 
 .student-welcome-copy > .user-role-id-line {
   display: inline-block;
-  margin: -0.05rem 0 0;
-  color: #c94f5d;
-  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
-  font-size: clamp(1.35rem, 2.2vw, 2rem);
-  font-weight: 600;
-  letter-spacing: 0.025em;
-  line-height: 1.12;
+  margin: 0.05rem 0 0.15rem;
+  padding: 0.22rem 0.75rem;
+  border: 1px solid rgba(199, 54, 89, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.52);
+  color: #a52d4a;
+  box-shadow:
+    0 4px 12px rgba(112, 38, 59, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(0.82rem, 1.15vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  line-height: 1.2;
 }
 
 .student-dashboard-layout .student-dashboard-intro {
@@ -807,7 +909,7 @@ tr[id^="student-"]:target {
 }
 
 .student-dashboard .metrics-grid .metric-card {
-  --metric-accent: #b83268;
+  --metric-accent: #c73659;
   position: relative;
   display: flex;
   min-width: 0;
@@ -847,7 +949,7 @@ tr[id^="student-"]:target {
 }
 
 .student-dashboard .metrics-grid .metric-card:nth-child(2) {
-  --metric-accent: #d06b91;
+  --metric-accent: #c73659;
   background:
     radial-gradient(
       circle at 8% 90%,
@@ -858,14 +960,14 @@ tr[id^="student-"]:target {
 }
 
 .student-dashboard .metrics-grid .metric-card:nth-child(3) {
-  --metric-accent: #96506f;
+  --metric-accent: #c73659;
   background:
     radial-gradient(circle at 90% 8%, rgba(150, 80, 111, 0.1), transparent 42%),
     linear-gradient(145deg, #fffdfd, #f9edf2);
 }
 
 .student-dashboard .metrics-grid .metric-card:nth-child(4) {
-  --metric-accent: #e08aaa;
+  --metric-accent: #c73659;
   background:
     radial-gradient(
       circle at 8% 10%,
@@ -908,7 +1010,7 @@ tr[id^="student-"]:target {
   color: #55283e;
   font-size: clamp(2.4rem, 5vw, 3.25rem);
   font-variant-numeric: tabular-nums;
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -926,7 +1028,7 @@ tr[id^="student-"]:target {
   padding: 0 0.5rem 0 2.5rem;
   color: #fff;
   font-size: clamp(0.72rem, 0.8vw, 0.82rem);
-  font-weight: 400;
+  font-weight: 700;
   line-height: 1.15;
   text-align: center;
   text-transform: uppercase;
@@ -993,6 +1095,76 @@ tr[id^="student-"]:target {
   }
 }
 
+/* Prevent account tables from collapsing into overlapping columns. */
+.admin-user-table-card .table-responsive,
+.admin-user-table-card .table-responsive:has(> .admin-user-table),
+.admin-user-table-card .table-responsive:has(> .registrar-user-table) {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-width: 100%;
+  padding-bottom: 0.35rem;
+}
+
+.admin-user-table-card .admin-user-table,
+.admin-user-table-card .registrar-user-table {
+  width: max-content;
+  min-width: 1180px;
+  table-layout: auto;
+}
+
+#tabUsers #usersTable {
+  width: 100%;
+}
+
+.admin-user-table-card .admin-user-table th,
+.admin-user-table-card .admin-user-table td,
+.admin-user-table-card .registrar-user-table th,
+.admin-user-table-card .registrar-user-table td {
+  vertical-align: middle;
+  overflow: visible;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.admin-user-table-card .admin-user-table th {
+  white-space: nowrap;
+}
+
+.admin-user-table-card .admin-user-table td:nth-child(1),
+.admin-user-table-card .admin-user-table td:nth-child(6),
+.admin-user-table-card .admin-user-table td:nth-child(8),
+.admin-user-table-card .admin-user-table td:nth-child(10),
+.admin-user-table-card .admin-user-table td:nth-child(11),
+.admin-user-table-card .registrar-user-table td:nth-child(1),
+.admin-user-table-card .registrar-user-table td:nth-child(6),
+.admin-user-table-card .registrar-user-table td:nth-child(8),
+.admin-user-table-card .registrar-user-table td:nth-child(10) {
+  white-space: nowrap;
+}
+
+.admin-user-table-card .admin-user-table .admin-account-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: max-content;
+}
+
+.admin-user-table-card .admin-user-table .admin-account-actions form {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: max-content;
+}
+
+.admin-user-table-card .admin-user-table .admin-account-actions .btn,
+.admin-user-table-card .admin-user-table td > .btn {
+  width: auto;
+  min-width: max-content;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.75rem;
+  white-space: nowrap;
+}
+
 .student-dashboard-shell
   :is(
     .student-welcome-card,
@@ -1005,6 +1177,415 @@ tr[id^="student-"]:target {
     .course-roster-card
   ) {
   border-radius: 10px;
+}
+
+/* Unified liquid-glass dashboard metrics */
+.student-dashboard .metrics-grid .metric-card {
+  --metric-accent: #c73659;
+  isolation: isolate;
+  height: 154px;
+  min-height: 154px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 22px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.78),
+      rgba(251, 232, 238, 0.48)
+    ),
+    radial-gradient(
+      circle at 90% 100%,
+      rgba(199, 54, 89, 0.16),
+      transparent 48%
+    );
+  box-shadow:
+    0 18px 38px rgba(112, 38, 59, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(199, 54, 89, 0.08);
+  backdrop-filter: blur(20px) saturate(155%);
+  -webkit-backdrop-filter: blur(20px) saturate(155%);
+}
+
+.student-dashboard .metrics-grid .metric-card::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.48),
+    transparent 34%,
+    rgba(199, 54, 89, 0.06) 72%,
+    transparent
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.student-dashboard .metrics-grid .metric-card:nth-child(2),
+.student-dashboard .metrics-grid .metric-card:nth-child(3),
+.student-dashboard .metrics-grid .metric-card:nth-child(4) {
+  --metric-accent: #c73659;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.78),
+      rgba(251, 232, 238, 0.48)
+    ),
+    radial-gradient(
+      circle at 90% 100%,
+      rgba(199, 54, 89, 0.16),
+      transparent 48%
+    );
+}
+
+.student-dashboard .metrics-grid .metric-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(199, 54, 89, 0.3);
+  box-shadow:
+    0 22px 44px rgba(112, 38, 59, 0.17),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+.student-dashboard .metrics-grid .metric-data h3 {
+  color: #70263b;
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(2.35rem, 4.5vw, 3.1rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  text-shadow: 0 2px 10px rgba(112, 38, 59, 0.1);
+}
+
+.student-dashboard .metrics-grid .metric-data p {
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(0.68rem, 0.78vw, 0.8rem);
+  font-weight: 700;
+  letter-spacing: 0.015em;
+}
+
+/* Keep the metric label in the glass header and pair each icon with its value. */
+.student-dashboard .metrics-grid .metric-card {
+  flex-direction: row;
+  justify-content: center;
+  gap: 0.7rem;
+  padding: 3.25rem 1rem 1rem;
+}
+
+.student-dashboard .metrics-grid .metric-icon {
+  position: static;
+  flex: 0 0 2.45rem;
+  width: 2.45rem;
+  height: 2.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 50%;
+  background: rgba(199, 54, 89, 0.12);
+  color: #c73659;
+  box-shadow:
+    0 6px 14px rgba(112, 38, 59, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.student-dashboard .metrics-grid .metric-icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.student-dashboard .metrics-grid .metric-data {
+  display: block;
+  min-width: 0;
+}
+
+.student-dashboard .metrics-grid .metric-data h3 {
+  position: static;
+  margin: 0;
+  transform: none;
+  color: #70263b;
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.student-dashboard .metrics-grid .metric-data p {
+  top: 8px;
+  right: 8px;
+  left: 8px;
+}
+
+@media (max-width: 600px) {
+  .student-dashboard .metrics-grid .metric-card {
+    gap: 0.45rem;
+    padding: 3rem 0.65rem 0.8rem;
+  }
+
+  .student-dashboard .metrics-grid .metric-icon {
+    flex-basis: 2rem;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .student-dashboard .metrics-grid .metric-icon svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+/* Compact horizontal dashboard stats */
+.student-dashboard .metrics-grid .metric-card,
+.admin-dashboard .metrics-grid .metric-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  height: 106px;
+  min-height: 106px;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(251, 232, 238, 0.56)
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(199, 54, 89, 0.1),
+      transparent 55%
+    );
+  box-shadow:
+    0 12px 28px rgba(112, 38, 59, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.student-dashboard .metrics-grid .metric-card::before,
+.student-dashboard .metrics-grid .metric-card::after,
+.admin-dashboard .metrics-grid .metric-card::before,
+.admin-dashboard .metrics-grid .metric-card::after {
+  display: none;
+}
+
+.student-dashboard .metrics-grid .metric-icon,
+.admin-dashboard .metrics-grid .metric-icon {
+  position: static;
+  z-index: auto;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 11px;
+  background: rgba(251, 232, 238, 0.92);
+  color: #c73659;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.student-dashboard .metrics-grid .metric-icon svg,
+.admin-dashboard .metrics-grid .metric-icon svg {
+  width: 21px;
+  height: 21px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.student-dashboard .metrics-grid .metric-data,
+.admin-dashboard .metrics-grid .metric-data {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.18rem;
+}
+
+.student-dashboard .metrics-grid .metric-data h3,
+.admin-dashboard .metrics-grid .metric-data h3 {
+  position: static;
+  margin: 0;
+  transform: none;
+  color: #d26b86;
+  font-family: "Montserrat", sans-serif;
+  font-size: 1.65rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-shadow: none;
+}
+
+.student-dashboard .metrics-grid .metric-data p,
+.admin-dashboard .metrics-grid .metric-data p {
+  position: static;
+  display: block;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  color: #68758a;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-align: left;
+  text-transform: none;
+}
+
+@media (max-width: 600px) {
+  .student-dashboard .metrics-grid .metric-card,
+  .admin-dashboard .metrics-grid .metric-card {
+    gap: 0.7rem;
+    height: 100px;
+    min-height: 100px;
+    padding: 0.8rem;
+  }
+
+  .student-dashboard .metrics-grid .metric-icon,
+  .admin-dashboard .metrics-grid .metric-icon {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .student-dashboard .metrics-grid .metric-icon svg,
+  .admin-dashboard .metrics-grid .metric-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .student-dashboard .metrics-grid .metric-data h3,
+  .admin-dashboard .metrics-grid .metric-data h3 {
+    font-size: 1.4rem;
+  }
+
+  .student-dashboard .metrics-grid .metric-data p,
+  .admin-dashboard .metrics-grid .metric-data p {
+    font-size: 0.66rem;
+  }
+}
+
+/* Original stat composition: icon and label in the accent glass header, value below. */
+.student-dashboard .metrics-grid .metric-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0;
+  height: 154px;
+  min-height: 154px;
+  padding: 3.75rem 1rem 1rem;
+}
+
+.student-dashboard .metrics-grid .metric-card::before {
+  inset: 9px 9px auto;
+  height: 43px;
+  border-radius: 14px;
+  background: #c73659;
+  box-shadow:
+    0 7px 16px rgba(112, 38, 59, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.student-dashboard .metrics-grid .metric-icon {
+  position: absolute;
+  z-index: 2;
+  top: 19px;
+  left: 24px;
+  flex: none;
+  width: 23px;
+  height: 23px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
+}
+
+.student-dashboard .metrics-grid .metric-icon svg {
+  width: 1.45rem;
+  height: 1.45rem;
+  stroke-width: 1.9;
+}
+
+.student-dashboard .metrics-grid .metric-data {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.student-dashboard .metrics-grid .metric-data p {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  right: 9px;
+  left: 9px;
+  display: flex;
+  height: 43px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 0.5rem 0 2.8rem;
+  color: #fff;
+  font-size: clamp(0.66rem, 0.75vw, 0.78rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.student-dashboard .metrics-grid .metric-data h3 {
+  position: static;
+  margin: 0.45rem 0 0;
+  transform: none;
+  color: #70263b;
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(2.45rem, 4.5vw, 3.2rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  text-shadow: 0 2px 10px rgba(112, 38, 59, 0.12);
+}
+
+@media (max-width: 600px) {
+  .student-dashboard .metrics-grid .metric-card {
+    height: 150px;
+    min-height: 150px;
+    padding: 3.35rem 0.65rem 0.8rem;
+  }
+
+  .student-dashboard .metrics-grid .metric-card::before {
+    inset: 7px 7px auto;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .student-dashboard .metrics-grid .metric-icon {
+    top: 15px;
+    left: 17px;
+  }
+
+  .student-dashboard .metrics-grid .metric-data p {
+    top: 7px;
+    right: 7px;
+    left: 7px;
+    height: 38px;
+    padding-left: 2.25rem;
+    font-size: clamp(0.58rem, 1.9vw, 0.68rem);
+  }
+
+  .student-dashboard .metrics-grid .metric-data h3 {
+    margin-top: 0.35rem;
+    font-size: clamp(2.15rem, 8vw, 2.8rem);
+  }
 }
 
 .student-dashboard-layout .student-dashboard-side-column,
@@ -1031,6 +1612,132 @@ tr[id^="student-"]:target {
 
 .student-dashboard-shell.has-dashboard-announcements.sidebar-collapsed {
   grid-template-columns: 52px 0 minmax(0, 1fr) 260px;
+}
+
+/* Final shared stat layout: compact icon tile, value, then label. */
+.admin-dashboard .metrics-grid .metric-card,
+.student-dashboard .metrics-grid .metric-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 1rem !important;
+  height: 106px !important;
+  min-height: 106px !important;
+  padding: 1rem 1.15rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.84) !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(251, 232, 238, 0.56)
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(199, 54, 89, 0.1),
+      transparent 55%
+    ) !important;
+  box-shadow:
+    0 12px 28px rgba(112, 38, 59, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.admin-dashboard .metrics-grid .metric-card::before,
+.admin-dashboard .metrics-grid .metric-card::after,
+.student-dashboard .metrics-grid .metric-card::before,
+.student-dashboard .metrics-grid .metric-card::after {
+  display: none !important;
+}
+
+.admin-dashboard .metrics-grid .metric-icon,
+.student-dashboard .metrics-grid .metric-icon {
+  position: static !important;
+  flex: 0 0 44px !important;
+  width: 44px !important;
+  height: 44px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: rgba(251, 232, 238, 0.92) !important;
+  color: #c73659 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.admin-dashboard .metrics-grid .metric-icon svg,
+.student-dashboard .metrics-grid .metric-icon svg {
+  width: 21px !important;
+  height: 21px !important;
+}
+
+.admin-dashboard .metrics-grid .metric-data,
+.student-dashboard .metrics-grid .metric-data {
+  display: flex !important;
+  width: auto !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 0.18rem !important;
+}
+
+.admin-dashboard .metrics-grid .metric-data h3,
+.student-dashboard .metrics-grid .metric-data h3 {
+  position: static !important;
+  margin: 0 !important;
+  transform: none !important;
+  color: #d26b86 !important;
+  font-family: "Montserrat", sans-serif !important;
+  font-size: 1.65rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1 !important;
+  text-shadow: none !important;
+}
+
+.admin-dashboard .metrics-grid .metric-data p,
+.student-dashboard .metrics-grid .metric-data p {
+  position: static !important;
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #68758a !important;
+  font-family: "Montserrat", sans-serif !important;
+  font-size: 0.74rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  text-align: left !important;
+  text-transform: none !important;
+}
+
+@media (max-width: 600px) {
+  .admin-dashboard .metrics-grid .metric-card,
+  .student-dashboard .metrics-grid .metric-card {
+    gap: 0.7rem !important;
+    height: 100px !important;
+    min-height: 100px !important;
+    padding: 0.8rem !important;
+  }
+
+  .admin-dashboard .metrics-grid .metric-icon,
+  .student-dashboard .metrics-grid .metric-icon {
+    flex-basis: 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .admin-dashboard .metrics-grid .metric-data h3,
+  .student-dashboard .metrics-grid .metric-data h3 {
+    font-size: 1.4rem !important;
+  }
+
+  .admin-dashboard .metrics-grid .metric-data p,
+  .student-dashboard .metrics-grid .metric-data p {
+    font-size: 0.66rem !important;
+  }
 }
 
 @media (max-width: 1250px) and (min-width: 901px) {
@@ -1086,6 +1793,8 @@ tr[id^="student-"]:target {
 
   .dashboard-announcements {
     grid-row: 2;
+    height: 24rem;
+    max-height: 60vh;
   }
 
   .student-dashboard-shell .student-sidebar {
@@ -1138,6 +1847,45 @@ tr[id^="student-"]:target {
   }
 }
 
+@media (min-width: 901px) {
+  body.professor-portal .student-dashboard-shell {
+    grid-template-columns: 52px 290px minmax(0, 1fr);
+  }
+
+  body.professor-portal .student-dashboard-shell.has-dashboard-announcements {
+    grid-template-columns: 52px 290px minmax(0, 1fr) 260px;
+  }
+
+  body.professor-portal
+    .student-dashboard-shell.people-search-open:not(.has-dashboard-announcements) {
+    grid-template-columns: 52px 290px minmax(0, 1fr);
+  }
+
+  body.professor-portal
+    .student-dashboard-shell.has-dashboard-announcements.people-search-open {
+    grid-template-columns: 52px 290px minmax(0, 1fr) 260px;
+  }
+
+  body.professor-portal .student-dashboard-shell .student-sidebar {
+    padding: 1rem;
+  }
+
+  body.professor-portal .student-dashboard-shell .student-sidebar-link {
+    min-height: 48px;
+    padding: 0.7rem 0.75rem;
+  }
+
+  body.professor-portal
+    .student-dashboard-shell.sidebar-collapsed:not(.has-dashboard-announcements) {
+    grid-template-columns: 52px 0 minmax(0, 1fr);
+  }
+
+  body.professor-portal
+    .student-dashboard-shell.has-dashboard-announcements.sidebar-collapsed {
+    grid-template-columns: 52px 0 minmax(0, 1fr) 260px;
+  }
+}
+
 .support-request-card-heading,
 .support-request-meta,
 .support-request-form-row {
@@ -1177,7 +1925,7 @@ tr[id^="student-"]:target {
 }
 .support-request-filter label {
   margin: 0;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -1188,7 +1936,7 @@ tr[id^="student-"]:target {
   width: 1rem;
   height: 1rem;
   margin: 0;
-  accent-color: #b94f63;
+  accent-color: #a52d4a;
   cursor: pointer;
 }
 
@@ -1197,42 +1945,32 @@ tr[id^="student-"]:target {
   align-items: center;
   justify-content: center;
   margin: 0;
-  padding: 0.35rem;
-  border: 1px solid rgba(223, 141, 157, 0.2);
-  border-radius: 0.55rem;
-  background: rgba(255, 255, 255, 0.78);
-  transition:
-    background-color 140ms ease,
-    border-color 140ms ease;
-}
-
-.registrar-announcement-select:hover,
-.registrar-announcement-select:focus-within {
-  border-color: rgba(217, 133, 150, 0.42);
-  background: #fff3f5;
+  padding: 0;
 }
 
 .registrar-announcement-select input {
   width: 1rem;
+  min-width: 1rem;
   height: 1rem;
   margin: 0;
-  accent-color: #d98596;
+  cursor: pointer;
 }
 
 .registrar-announcement-table .registrar-announcement-select-heading,
 .registrar-announcement-table .registrar-announcement-select-cell {
-  width: 3.25rem;
-  padding-right: 0.45rem;
-  padding-left: 0.45rem;
-  text-align: center;
+  width: 3.5rem;
+  padding-right: 0.5rem;
+  padding-left: 1rem;
+  text-align: left;
+  vertical-align: middle;
 }
 
 .registrar-announcement-select-heading {
-  background: rgba(255, 241, 243, 0.45);
+  background: rgba(251, 232, 238, 0.45);
 }
 
 .registrar-announcement-select-cell {
-  background: rgba(255, 248, 249, 0.58);
+  background: transparent;
 }
 
 .registrar-announcement-table .announcement-attachment-open {
@@ -1299,7 +2037,7 @@ tr[id^="student-"]:target {
   display: grid;
   gap: 0.15rem;
   padding: 0.45rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #f0c7d2;
   border-radius: 10px;
   background: #fff;
   box-shadow: 0 12px 30px rgba(30, 41, 59, 0.14);
@@ -1318,14 +2056,14 @@ tr[id^="student-"]:target {
 }
 
 .registrar-audience-options label:hover {
-  background: #fff1f2;
+  background: #fbe8ee;
 }
 
 .registrar-audience-options input {
   width: 1rem;
   height: 1rem;
   margin: 0;
-  accent-color: #b94f63;
+  accent-color: #a52d4a;
 }
 
 .registrar-audience-options input:disabled + span {
@@ -1335,7 +2073,7 @@ tr[id^="student-"]:target {
 .registrar-announcement-audience > small {
   display: block;
   margin-top: 0.4rem;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.76rem;
   line-height: 1.45;
 }
@@ -1350,7 +2088,7 @@ tr[id^="student-"]:target {
   padding: 0;
   border: 1px solid rgba(185, 79, 99, 0.24);
   border-radius: 9px;
-  background: linear-gradient(145deg, #fff, #fff4f6);
+  background: linear-gradient(145deg, #fff, #fbe8ee);
   color: #a64e61;
   box-shadow: 0 2px 6px rgba(70, 38, 48, 0.05);
   cursor: pointer;
@@ -1371,13 +2109,13 @@ tr[id^="student-"]:target {
 }
 .support-request-delete-button:not(:disabled):hover {
   transform: translateY(-1px);
-  background: #b94f63;
+  background: #a52d4a;
   color: #fff;
   box-shadow: 0 5px 12px rgba(185, 79, 99, 0.2);
 }
 .support-request-delete-button:focus-visible,
 .support-request-select input:focus-visible {
-  outline: 2px solid #b94f63;
+  outline: 2px solid #a52d4a;
   outline-offset: 3px;
 }
 .support-request-delete-button:disabled {
@@ -1412,7 +2150,7 @@ tr[id^="student-"]:target {
   align-items: center;
   min-width: 1rem;
   min-height: 1.4rem;
-  color: #64748b;
+  color: #705d65;
   cursor: pointer;
 }
 .support-request-select .sr-only {
@@ -1452,7 +2190,7 @@ tr[id^="student-"]:target {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin: 1.25rem 0 0;
-  color: #64748b;
+  color: #705d65;
   font-size: 0.8rem;
 }
 
@@ -1469,7 +2207,7 @@ tr[id^="student-"]:target {
   align-items: center;
   justify-content: center;
   padding: 0.35rem 0.55rem;
-  border: 1px solid rgba(217, 133, 150, 0.2);
+  border: 1px solid rgba(112, 38, 59, 0.2);
   border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.88);
   color: #475569;
@@ -1483,13 +2221,13 @@ tr[id^="student-"]:target {
 }
 
 .portal-pagination-link:hover {
-  border-color: rgba(217, 133, 150, 0.48);
-  background: #fff4f6;
+  border-color: rgba(112, 38, 59, 0.48);
+  background: #fbe8ee;
   color: #a64e61;
 }
 
 .portal-pagination-link:focus-visible {
-  outline: 2px solid #d98596;
+  outline: 2px solid #c73659;
   outline-offset: 2px;
 }
 
@@ -1839,8 +2577,8 @@ tr[id^="student-"]:target {
 }
 
 .portal-pagination-link.is-current {
-  border-color: #d98596;
-  background: #d98596;
+  border-color: #c73659;
+  background: #c73659;
   color: #fff;
 }
 
@@ -1872,7 +2610,7 @@ tr[id^="student-"]:target {
 .support-request-card-heading p,
 .support-request-meta,
 .support-request-response small {
-  color: #64748b;
+  color: #705d65;
   font-size: 0.83rem;
 }
 
@@ -1955,7 +2693,7 @@ tr[id^="student-"]:target {
 }
 
 .support-request-reply time {
-  color: #64748b;
+  color: #705d65;
   font-weight: 500;
 }
 
@@ -1967,7 +2705,7 @@ tr[id^="student-"]:target {
 }
 
 .support-request-pending {
-  color: #64748b;
+  color: #705d65;
 }
 
 @media (max-width: 640px) {
@@ -1984,5 +2722,592 @@ tr[id^="student-"]:target {
 
   .support-request-filter select {
     min-width: 130px;
+  }
+}
+
+/* Shared dashboard palette: homepage berry accent with a softer dark-grey text tone. */
+:is(
+  body.admin-dashboard,
+  body.student-dashboard,
+  body.registrar-portal,
+  body.dean-portal,
+  body.professor-portal
+) {
+  --dashboard-accent: #c73659;
+  --dashboard-text: #4b5563;
+  --dashboard-border: rgba(199, 54, 89, 0.22);
+  --dashboard-shadow: rgba(199, 54, 89, 0.14);
+  color: var(--dashboard-text);
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  :is(
+    .student-sidebar-link,
+    .student-nav-label,
+    .portal-icon-button,
+    .dashboard-announcement-item,
+    .dashboard-announcement-item small,
+    .dashboard-announcement-item p,
+    .student-empty-note,
+    .metric-data p
+  ) {
+  color: var(--dashboard-text);
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  :is(
+    h1,
+    h2,
+    h3,
+    .student-dashboard .student-hero-text h1,
+    .student-dashboard .card-title,
+    .dashboard-announcements h2,
+    .student-sidebar-link.active,
+    .student-sidebar-link:hover,
+    .portal-icon-button:hover,
+    .portal-icon-button:focus-visible,
+    .metric-data h3,
+    .dashboard-announcement-item:hover strong,
+    .student-welcome-copy > .user-role-id-line
+  ) {
+  color: var(--dashboard-accent);
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  :is(
+    .metric-icon,
+    .metric-icon.navy,
+    .metric-icon.teal,
+    .metric-icon.gold,
+    .metric-icon.coral
+  ) {
+  background: #fbe8ee !important;
+  color: var(--dashboard-accent) !important;
+  border-color: var(--dashboard-border) !important;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  :is(
+    .metric-card,
+    .student-welcome-card,
+    .student-overview-card,
+    .card,
+    .course-card,
+    .bulletin-card,
+    .dashboard-announcements
+  ) {
+  border-color: var(--dashboard-border);
+  box-shadow:
+    0 12px 32px var(--dashboard-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  .student-sidebar-link.active {
+  background: #fbe8ee;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  .app-navbar {
+  background: #c73659 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 8px 24px rgba(199, 54, 89, 0.2) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  .app-navbar
+  :is(.header-wordmark, .header-tagline, .app-navbar-clock, .user-name) {
+  color: #ffffff !important;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  .app-navbar
+  .header-logo-mark
+  path {
+  fill: #ffffff !important;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  .app-navbar
+  .header-logo-mark {
+  display: block !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  height: auto !important;
+  flex: 0 0 38px !important;
+  filter: none !important;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  .app-navbar
+  .user-badge {
+  border-color: rgba(255, 255, 255, 0.32) !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  .app-navbar
+  .avatar-circle {
+  background: #fbe8ee !important;
+  color: #c73659 !important;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  .app-navbar
+  .admin-signout {
+  border-color: rgba(255, 255, 255, 0.72) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  :is(.btn-primary, .btn-danger, .btn-teal, .btn-coral) {
+  background: var(--red-gradient) !important;
+  color: #ffffff !important;
+}
+
+:is(
+    body.admin-dashboard,
+    body.student-dashboard,
+    body.registrar-portal,
+    body.dean-portal,
+    body.professor-portal
+  )
+  :is(.btn-primary, .btn-danger, .btn-teal, .btn-coral):hover {
+  background: var(--red-gradient-hover) !important;
+  color: #ffffff !important;
+}
+
+:is(
+  body.admin-dashboard,
+  body.student-dashboard,
+  body.registrar-portal,
+  body.dean-portal,
+  body.professor-portal
+) {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 236, 241, 0.1)
+    ),
+    url("../bgimage/APEX Learning Hub.png") !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+}
+
+/* Keep dialogs and notifications translucent across every portal surface. */
+.modal-backdrop {
+  background: rgba(74, 24, 40, 0.32) !important;
+  backdrop-filter: blur(14px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(145%) !important;
+}
+
+.modal-dialog,
+dialog[open] {
+  border: 1px solid rgba(255, 255, 255, 0.76) !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  box-shadow:
+    0 24px 70px rgba(112, 38, 59, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+}
+
+dialog[open]::backdrop {
+  background: rgba(74, 24, 40, 0.32);
+  backdrop-filter: blur(14px) saturate(145%);
+  -webkit-backdrop-filter: blur(14px) saturate(145%);
+}
+
+.modal-header,
+.modal-footer {
+  background: rgba(251, 232, 238, 0.42) !important;
+  border-color: rgba(199, 54, 89, 0.14) !important;
+}
+
+.admin-user-table-card
+  .admin-user-table
+  :is(td > .btn, .admin-account-actions .btn) {
+  width: 7.5rem !important;
+  min-width: 7.5rem !important;
+  max-width: 7.5rem !important;
+  height: 46px;
+  min-height: 46px !important;
+  box-sizing: border-box;
+  padding: 8px 10px !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius) !important;
+  background: var(--red-gradient) !important;
+  color: #ffffff !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(112, 38, 59, 0.25);
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    background var(--transition);
+}
+
+.admin-user-table-card
+  .admin-user-table
+  :is(td > .btn, .admin-account-actions .btn):hover {
+  background: var(--red-gradient-hover) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(199, 54, 89, 0.24);
+  transform: translateY(-2px);
+}
+
+.admin-user-table-card .admin-user-table td > button.btn.btn-login-grad {
+  border-color: rgba(199, 54, 89, 0.38) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #70263b !important;
+  box-shadow: 0 3px 10px rgba(112, 38, 59, 0.12);
+}
+
+.admin-user-table-card .admin-user-table td > button.btn.btn-login-grad:hover {
+  border-color: rgba(199, 54, 89, 0.24) !important;
+  background: #fbe8ee !important;
+  color: #70263b !important;
+  box-shadow: 0 6px 16px rgba(199, 54, 89, 0.16);
+}
+
+#createRegistrarModal .modal-header {
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+#createRegistrarModal .registrar-modal-heading {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#createRegistrarModal .registrar-modal-heading .modal-title {
+  margin: 0;
+}
+
+#createRegistrarModal .registrar-modal-description {
+  margin: 0.4rem 0 0;
+  color: #705d65;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+#createRegistrarModal .modal-close {
+  flex: 0 0 auto;
+}
+
+.apex-confirm-dialog {
+  width: min(440px, calc(100vw - 2rem));
+  max-width: none;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 1.15rem;
+  color: var(--text-main);
+}
+
+.apex-confirm-dialog form {
+  display: flex;
+  flex-direction: column;
+}
+
+.apex-confirm-dialog .modal-body {
+  min-height: 5rem;
+}
+
+.apex-confirm-dialog .modal-body p {
+  margin: 0;
+}
+
+.portal-toast {
+  border-color: rgba(255, 255, 255, 0.74) !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  box-shadow:
+    0 14px 36px rgba(112, 38, 59, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(22px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+  color: #3f2932 !important;
+}
+
+.portal-toast-dismiss {
+  background: rgba(199, 54, 89, 0.1) !important;
+  color: #70263b !important;
+}
+
+.portal-toast-dismiss:hover {
+  background: rgba(199, 54, 89, 0.18) !important;
+}
+
+:is(
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  .btn,
+  .btn-login-grad,
+  .btn-hero-primary,
+  .btn-hero-secondary,
+  .professor-course-action-button,
+  .professor-grade-reopen,
+  .professor-assessment-action-button,
+  .professor-assessment-view-link,
+  .announcement-attachment-open,
+  .admin-create-registrar-trigger,
+  .apex-assistant-launcher
+):not(
+  .modal-close,
+  .student-sidebar-backdrop,
+  .student-mobile-toggle,
+  .student-sidebar-toggle,
+  .portal-icon-button,
+  .student-fiscal-year-close,
+  .media-carousel-arrow,
+  .apex-assistant-close,
+  .portal-toast-dismiss,
+  .announcement-attachment-viewer-close,
+  .course-assessment-remove-question,
+  .portal-password-toggle,
+  .back-to-top-btn,
+  .professor-final-grade-save
+) {
+  min-height: 44px !important;
+  box-sizing: border-box;
+  padding-block: 0.6rem !important;
+  border-radius: 10px !important;
+  font-family: var(--font-sans) !important;
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-teal:hover:not(:disabled),
+.btn-coral:hover:not(:disabled),
+.btn-danger:hover:not(:disabled),
+.btn-login-grad:hover:not(:disabled),
+.btn-hero-primary:hover:not(:disabled),
+.professor-course-action-button:hover:not(:disabled):not(
+    .professor-grade-unrelease-button
+  ),
+.professor-grade-reopen:hover:not(:disabled),
+.professor-assessment-action-button:hover:not(:disabled),
+.announcement-attachment-open:hover:not(:disabled),
+.admin-create-registrar-trigger:hover:not(:disabled),
+.apex-assistant-launcher:hover:not(:disabled) {
+  border-color: transparent !important;
+  background: var(--red-gradient-hover) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(199, 54, 89, 0.24) !important;
+  transform: translateY(-2px);
+}
+
+.btn-outline:hover:not(:disabled),
+.btn-hero-secondary:hover:not(:disabled),
+.professor-assessment-view-link:hover:not(:disabled) {
+  border-color: rgba(199, 54, 89, 0.48) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.78),
+    rgba(251, 232, 238, 0.72)
+  ) !important;
+  color: #a52d4a !important;
+  box-shadow: 0 6px 16px rgba(199, 54, 89, 0.18) !important;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  transform: translateY(-2px);
+}
+
+.student-dashboard-shell .student-sidebar-link {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.student-dashboard-shell .student-nav-icon {
+  display: inline-grid;
+  flex: 0 0 24px;
+  place-items: center;
+  line-height: 0;
+}
+
+.student-dashboard-shell .student-nav-icon svg {
+  display: block;
+}
+
+.student-dashboard-shell .student-nav-label {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .student-dashboard .metrics-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.65rem !important;
+  }
+
+  .student-dashboard .metrics-grid .metric-card {
+    display: grid !important;
+    grid-template-columns: 38px minmax(0, 1fr) auto !important;
+    grid-template-areas: "icon label value" !important;
+    align-items: center !important;
+    justify-content: initial !important;
+    gap: 0.75rem !important;
+    height: 66px !important;
+    min-height: 66px !important;
+    padding: 0.65rem 0.8rem !important;
+    border: 1px solid rgba(199, 54, 89, 0.2) !important;
+    border-radius: 9px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 5px 16px rgba(112, 38, 59, 0.08) !important;
+    text-align: left !important;
+  }
+
+  .student-dashboard .metrics-grid .metric-icon {
+    grid-area: icon;
+    flex-basis: 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    background: #fbe8ee !important;
+    color: #c73659 !important;
+  }
+
+  .student-dashboard .metrics-grid .metric-data {
+    display: contents !important;
+  }
+
+  .student-dashboard .metrics-grid .metric-data p {
+    grid-area: label;
+    min-width: 0;
+    color: #59464e !important;
+    font-size: 0.82rem !important;
+    font-weight: 650 !important;
+    line-height: 1.25 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .student-dashboard .metrics-grid .metric-data h3 {
+    grid-area: value;
+    color: #70263b !important;
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .student-dashboard .professor-assigned-classes .roster-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch;
+  }
+
+  .student-dashboard .professor-assigned-course-placeholder {
+    display: none;
+  }
+
+  .student-dashboard .professor-assigned-course-card {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .student-dashboard .professor-assigned-course-card > * {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .student-dashboard .professor-assigned-course-header h2,
+  .student-dashboard .professor-assigned-schedules li,
+  .student-dashboard .professor-assigned-schedules p {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: normal;
   }
 }

@@ -19,6 +19,9 @@ $isAdminPortal = $activeUserRole === 'admin' && !empty($useVisualTheme);
 $isRegistrarPortal = $activeUserRole === 'registrar' && !empty($useVisualTheme);
 $isFacultyPortal = $activeUserRole === 'professor' && !empty($useVisualTheme);
 $isDeanPortal = $activeUserRole === 'dean' && !empty($useVisualTheme);
+$mobileNavigationEnabled = !empty($useVisualTheme)
+    && isset($_SESSION['user_id'])
+    && in_array($activeUserRole, ['admin', 'registrar', 'dean', 'professor', 'student'], true);
 $siteRootPath = $siteRootPath ?? (isset($_SERVER['SCRIPT_FILENAME'])
     && str_contains(str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME']), '/views/')
     ? '../../'
@@ -74,14 +77,17 @@ if (!empty($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
-    <link rel="stylesheet" href="<?= $siteRootPath ?>css/style.css?v=202611041145">
-    <link rel="stylesheet" href="<?= htmlspecialchars($siteRootPath . 'css/portal-toast.css', ENT_QUOTES, 'UTF-8') ?>">
+    <link rel="icon" type="image/svg+xml"
+        href="<?= htmlspecialchars($siteRootPath . 'favicon.svg?v=202611100755', ENT_QUOTES, 'UTF-8') ?>">
+    <link rel="stylesheet" href="<?= $siteRootPath ?>css/style.css?v=202611100035">
+    <link rel="stylesheet"
+        href="<?= htmlspecialchars($siteRootPath . 'css/portal-toast.css?v=202611092125', ENT_QUOTES, 'UTF-8') ?>">
     <?php if (!empty($useVisualTheme)): ?>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
             rel="stylesheet">
-        <link rel="stylesheet" href="<?= $siteRootPath ?>visual/css/visual.css?v=202611050900">
+        <link rel="stylesheet" href="<?= $siteRootPath ?>visual/css/visual.css?v=202611100815">
     <?php endif; ?>
     <?php if (isset($extraCss)): ?>
         <?php foreach ((array) $extraCss as $stylesheet): ?>
@@ -89,15 +95,19 @@ if (!empty($_SESSION['user_id'])) {
         <?php endforeach; ?>
     <?php endif; ?>
     <?php if (!empty($useVisualTheme)): ?>
-        <link rel="stylesheet" href="<?= $siteRootPath ?>css/portal-layout.css?v=202611071845">
-        <link rel="stylesheet" href="<?= $siteRootPath ?>css/announcement-attachments.css?v=202611062030">
+        <link rel="stylesheet" href="<?= $siteRootPath ?>css/portal-layout.css?v=202611101741">
+        <link rel="stylesheet" href="<?= $siteRootPath ?>css/announcement-attachments.css?v=202611100020">
+        <?php if ($mobileNavigationEnabled): ?>
+            <link rel="stylesheet"
+                href="<?= htmlspecialchars($siteRootPath . 'css/mobile-navigation.css?v=202611101732', ENT_QUOTES, 'UTF-8') ?>">
+        <?php endif; ?>
     <?php endif; ?>
     <?php if ($registrarAnnouncementGate !== null): ?>
         <link rel="stylesheet"
-            href="<?= htmlspecialchars($siteRootPath . 'css/registrar-announcement-gate.css?v=202611041802', ENT_QUOTES, 'UTF-8') ?>">
+            href="<?= htmlspecialchars($siteRootPath . 'css/registrar-announcement-gate.css?v=202611092125', ENT_QUOTES, 'UTF-8') ?>">
     <?php endif; ?>
 </head>
-<body<?= !empty($bodyClass) ? ' class="' . htmlspecialchars($bodyClass) . '"' : '' ?><?= !empty($useVisualTheme) ? ' data-visual-base="' . htmlspecialchars($siteRootPath . 'visual/') . '"' : '' ?><?= !empty($academicReadOnly) ? ' data-academic-readonly="true"' : '' ?><?= $registrarAnnouncementGate !== null ? ' data-registrar-announcement-gate="open"' : '' ?>
+<body<?= !empty($bodyClass) ? ' class="' . htmlspecialchars($bodyClass) . '"' : '' ?><?= !empty($useVisualTheme) ? ' data-visual-base="' . htmlspecialchars($siteRootPath . 'visual/') . '"' : '' ?><?= $mobileNavigationEnabled ? ' data-apex-mobile-navigation="enabled"' : '' ?><?= !empty($academicReadOnly) ? ' data-academic-readonly="true"' : '' ?><?= $registrarAnnouncementGate !== null ? ' data-registrar-announcement-gate="open"' : '' ?>
     data-academic-period-mode="<?= htmlspecialchars($_SESSION['academic_period_mode'] ?? 'global', ENT_QUOTES, 'UTF-8') ?>"
     data-academic-period="<?= htmlspecialchars($academicPeriod === null ? '' : $academicPeriod['academic_year'] . ':' . $academicPeriod['semester'], ENT_QUOTES, 'UTF-8') ?>"
     data-academic-period-endpoint="<?= htmlspecialchars($siteRootPath . 'api/academic_period.php', ENT_QUOTES, 'UTF-8') ?>">
@@ -106,9 +116,9 @@ if (!empty($_SESSION['user_id'])) {
             <div class="navbar-brand header-logo" role="img" aria-label="APEX Learning Hub">
                 <svg class="header-logo-mark" viewBox="0 0 504 428" role="img" aria-hidden="true">
                     <title>APEX Brand Mark</title>
-                    <path fill="var(--red-base)" d="M252 0 154 103a19 19 0 0 0-5 13v97L0 361v67h82l120-119v-62l50-49z" />
-                    <path fill="var(--red-base)" d="m262 13 87 92a15 15 0 0 1 5 12v97l150 147v67h-75L301 301v-53l-39-40z" />
-                    <path fill="var(--red-base)" d="M213 312h83l118 116h-99l-55-56h-57l-54 56H97z" />
+                    <path fill="#ffffff" d="M252 0 154 103a19 19 0 0 0-5 13v97L0 361v67h82l120-119v-62l50-49z" />
+                    <path fill="#ffffff" d="m262 13 87 92a15 15 0 0 1 5 12v97l150 147v67h-75L301 301v-53l-39-40z" />
+                    <path fill="#ffffff" d="M213 312h83l118 116h-99l-55-56h-57l-54 56H97z" />
                 </svg>
                 <span class="header-logo-type">
                     <span class="header-wordmark">APEX</span>
@@ -120,9 +130,9 @@ if (!empty($_SESSION['user_id'])) {
                 <div class="logo logo-nav">
                     <svg class="logo-mark" viewBox="0 0 504 428" role="img" aria-labelledby="nav-mark-title">
                         <title id="nav-mark-title">APEX three-part geometric mark</title>
-                        <path fill="var(--navy)" d="M252 0 154 103a19 19 0 0 0-5 13v97L0 361v67h82l120-119v-62l50-49z" />
-                        <path fill="var(--teal)" d="m262 13 87 92a15 15 0 0 1 5 12v97l150 147v67h-75L301 301v-53l-39-40z" />
-                        <path fill="var(--coral)" d="M213 312h83l118 116h-99l-55-56h-57l-54 56H97z" />
+                        <path fill="#ffffff" d="M252 0 154 103a19 19 0 0 0-5 13v97L0 361v67h82l120-119v-62l50-49z" />
+                        <path fill="#ffffff" d="m262 13 87 92a15 15 0 0 1 5 12v97l150 147v67h-75L301 301v-53l-39-40z" />
+                        <path fill="#ffffff" d="M213 312h83l118 116h-99l-55-56h-57l-54 56H97z" />
                     </svg>
                     <div class="logo-type">
                         <span class="wordmark">APEX</span>
@@ -170,6 +180,9 @@ if (!empty($_SESSION['user_id'])) {
             </div>
         <?php endif; ?>
     </header>
+    <?php if ($mobileNavigationEnabled): ?>
+        <?php require __DIR__ . '/mobile_nav.php'; ?>
+    <?php endif; ?>
     <?php if ($registrarAnnouncementGate !== null): ?>
         <div class="registrar-announcement-gate" data-registrar-announcement-gate-overlay
             data-site-root="<?= htmlspecialchars($siteRootPath, ENT_QUOTES, 'UTF-8') ?>"

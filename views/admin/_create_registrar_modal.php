@@ -7,32 +7,38 @@ $registrarModalYear = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manil
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
             <input type="hidden" name="action" value="create_registrar">
             <div class="modal-header">
-                <h2 class="modal-title">Create Registrar Account</h2>
+                <div class="registrar-modal-heading">
+                    <h2 class="modal-title">Create Registrar Account</h2>
+                    <p class="registrar-modal-description">A maximum of two registrar accounts can be active at once. Disabled and archived registrars do not count toward this limit.</p>
+                </div>
                 <button type="button" class="modal-close" data-close-modal aria-label="Close">&times;</button>
             </div>
             <div class="modal-body account-editor-grid">
                 <section class="account-editor-column" aria-label="Registrar personal details">
-                    <p class="text-muted">A maximum of two registrar accounts can be active at once. Disabled and archived registrars do not count toward this limit.</p>
                     <div class="account-editor-name-fields">
                         <div class="form-group">
                             <label for="registrarFirstName">First Name <span class="required-marker" aria-hidden="true">*</span></label>
                             <input type="text" class="form-control" id="registrarFirstName" name="first_name"
-                                placeholder="e.g. Juan" maxlength="50" autocomplete="given-name" required>
+                                placeholder="e.g. Juan" maxlength="50" autocomplete="given-name"
+                                pattern="[\p{L}\p{M} ]*" title="Use letters and spaces only." data-name-input required>
                         </div>
                         <div class="form-group">
                             <label for="registrarMiddleName">Middle Name</label>
                             <input type="text" class="form-control" id="registrarMiddleName" name="middle_name"
-                                placeholder="Optional" maxlength="50" autocomplete="additional-name">
+                                placeholder="Optional" maxlength="50" autocomplete="additional-name"
+                                pattern="[\p{L}\p{M} ]*" title="Use letters and spaces only." data-name-input>
                         </div>
                         <div class="form-group">
                             <label for="registrarLastName">Last Name <span class="required-marker" aria-hidden="true">*</span></label>
                             <input type="text" class="form-control" id="registrarLastName" name="last_name"
-                                placeholder="e.g. Dela Cruz" maxlength="50" autocomplete="family-name" required>
+                                placeholder="e.g. Dela Cruz" maxlength="50" autocomplete="family-name"
+                                pattern="[\p{L}\p{M} ]*" title="Use letters and spaces only." data-name-input required>
                         </div>
                         <div class="form-group">
                             <label for="registrarSuffix">Suffix</label>
                             <input type="text" id="registrarSuffix" name="suffix" class="form-control"
-                                placeholder="Optional (e.g. Jr.)" maxlength="20" autocomplete="honorific-suffix">
+                                placeholder="Optional (e.g. Jr.)" maxlength="20" autocomplete="honorific-suffix"
+                                pattern="[\p{L}\p{M} ]*" title="Use letters and spaces only." data-name-input>
                         </div>
                     </div>
                     <div class="form-group">

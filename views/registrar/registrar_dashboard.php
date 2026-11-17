@@ -17,14 +17,14 @@ $registrarApplicationRoot = rtrim($registrarApplicationRoot, '/');
 $registrarAdminProcessEndpoint = $registrarApplicationRoot . '/api/admin_process.php';
 $registrarViewTitles = [
     'dashboard' => 'Dashboard',
-    'courses' => 'Courses & Sections',
+    'courses' => 'Assigned Courses',
     'users' => 'User Accounts',
     'announcements' => 'Announcements',
     'placements' => 'Student Placements',
 ];
 $pageTitle = $registrarViewTitles[$registrarView] . ' | APEX Learning Hub';
-$extraCss = ['../../css/admin.css?v=202611081500', '../../css/student.css?v=202611020900'];
-$extraJs = ['../../js/admin.js?v=202611072130', '../../js/student.js?v=202610301835', '../../js/registrar-announcements.js?v=202611082130'];
+$extraCss = ['../../css/admin.css?v=202611101748', '../../css/student.css?v=202611020900'];
+$extraJs = ['../../js/admin.js?v=202611111525', '../../js/student.js?v=202610301835', '../../js/registrar-announcements.js?v=202611101748'];
 $bodyClass = 'admin-dashboard student-dashboard registrar-portal';
 $useVisualTheme = true;
 
@@ -34,9 +34,7 @@ $greeting = dashboardGreeting($manilaNow);
 $studentCount = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'student'")->fetchColumn();
 $profCount = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'professor'")->fetchColumn();
 $deanCount = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'dean'")->fetchColumn();
-$courseCountStmt = $pdo->prepare("SELECT COUNT(*) FROM courses c WHERE c.archived_at IS NULL" . academicPeriodRecordFilter('c', 'c.created_at'));
-$courseCountStmt->execute(academicPeriodRecordParams());
-$courseCount = $courseCountStmt->fetchColumn();
+$courseCount = $pdo->query("SELECT COUNT(*) FROM courses WHERE archived_at IS NULL")->fetchColumn();
 $selectedCourseStatus = $_GET['course_status'] ?? 'active';
 if (!in_array($selectedCourseStatus, ['all', 'active', 'archived'], true)) {
     $selectedCourseStatus = 'active';
@@ -216,16 +214,24 @@ if ($registrarView === 'placements' && $academicPeriod !== null) {
     }
 
     $placementCourseGradesByStudent = [];
+    $placementGradePeriodByStudent = [];
     $gradePeriodConditions = [];
     $gradePeriodParams = [];
-    foreach ($previousPlacementsByStudent as $index => $previousPlacement) {
+    foreach ($placementStudents as $index => $placementStudent) {
+        $studentId = (int) $placementStudent['id'];
+        $previousPlacement = $previousPlacementsByStudent[$studentId] ?? null;
+        $gradePeriod = $previousPlacement ?? [
+            'academic_year' => $academicPeriod['academic_year'],
+            'semester' => $academicPeriod['semester'],
+        ];
+        $placementGradePeriodByStudent[$studentId] = $gradePeriod;
         $studentParameter = 'grade_student_' . $index;
         $yearParameter = 'grade_year_' . $index;
         $semesterParameter = 'grade_semester_' . $index;
         $gradePeriodConditions[] = "(e.student_id = :{$studentParameter} AND e.academic_year = :{$yearParameter} AND e.semester = :{$semesterParameter})";
-        $gradePeriodParams[$studentParameter] = (int) $index;
-        $gradePeriodParams[$yearParameter] = $previousPlacement['academic_year'];
-        $gradePeriodParams[$semesterParameter] = $previousPlacement['semester'];
+        $gradePeriodParams[$studentParameter] = $studentId;
+        $gradePeriodParams[$yearParameter] = $gradePeriod['academic_year'];
+        $gradePeriodParams[$semesterParameter] = $gradePeriod['semester'];
     }
     if ($gradePeriodConditions !== []) {
         $placementGradesStmt = $pdo->prepare("
@@ -240,6 +246,30 @@ if ($registrarView === 'placements' && $academicPeriod !== null) {
         $placementGradesStmt->execute($gradePeriodParams);
         foreach ($placementGradesStmt->fetchAll(PDO::FETCH_ASSOC) as $courseGrade) {
             $placementCourseGradesByStudent[(int) $courseGrade['student_id']][] = $courseGrade;
+        }
+    }
+
+    $academicYearCourseGradesByStudent = [];
+    $academicYearGradeConditions = [];
+    $academicYearGradeParams = [];
+    foreach ($placementGradePeriodByStudent as $index => $gradePeriod) {
+        $studentParameter = 'annual_grade_student_' . $index;
+        $academicYearGradeConditions[] = "e.student_id = :{$studentParameter}";
+        $academicYearGradeParams[$studentParameter] = (int) $index;
+    }
+    if ($academicYearGradeConditions !== []) {
+        $academicYearGradesStmt = $pdo->prepare("
+            SELECT e.student_id, e.academic_year, e.semester, c.course_code, c.course_name,
+                   e.final_grade, e.grade_status, e.grade_released_at
+            FROM enrollments e
+            JOIN courses c ON c.id = e.course_id
+            WHERE e.status = 'APPROVED'
+              AND (" . implode(' OR ', $academicYearGradeConditions) . ")
+                        ORDER BY e.student_id, e.academic_year DESC, FIELD(e.semester, 'first', 'second'), c.course_code, c.course_name
+        ");
+        $academicYearGradesStmt->execute($academicYearGradeParams);
+        foreach ($academicYearGradesStmt->fetchAll(PDO::FETCH_ASSOC) as $courseGrade) {
+            $academicYearCourseGradesByStudent[(int) $courseGrade['student_id']][] = $courseGrade;
         }
     }
 }
@@ -315,7 +345,7 @@ require_once '../../includes/header.php';
                     <div class="metric-icon teal" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
                             <circle cx="9" cy="8" r="3" />
-                            <path d="M3 20v-1a6 6 0 0 1 12 0v1M16 5.5a3 3 0 0 1 0 5.8M18 14a5 5 0 0 1 3 4.5V20" />
+                            <path d="M3 20v-1a6 6 0 0 1 12 0v1M17 8h5M19.5 5.5v5" />
                         </svg>
                     </div>
                     <div class="metric-data">
@@ -382,9 +412,8 @@ require_once '../../includes/header.php';
                                 id="coursesTable">
                                 <thead>
                                     <tr>
-                                        <th>Course Code</th>
-                                        <th>Course Name</th>
-                                        <th>Assigned Section &amp; Professor</th>
+                                        <th>Assigned Course</th>
+                                        <th>Assigned Professors</th>
                                         <th>Capacity</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -393,20 +422,19 @@ require_once '../../includes/header.php';
                                 <tbody>
                                     <?php if (empty($courses)): ?>
                                         <tr>
-                                            <td class="admin-table-empty" colspan="6">No courses found for this status.
+                                            <td class="admin-table-empty" colspan="5">No courses found for this status.
                                             </td>
                                         </tr>
                                     <?php else: ?>
                                         <?php foreach ($courses as $c): ?>
                                             <tr>
-                                                <td><strong><?= htmlspecialchars($c['course_code']) ?></strong></td>
                                                 <td>
+                                                    <strong><?= htmlspecialchars($c['course_code'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                                    <br>
                                                     <?= htmlspecialchars($c['course_name'], ENT_QUOTES, 'UTF-8') ?>
                                                 </td>
                                                 <td>
-                                                    Section
-                                                    <?= htmlspecialchars($c['section_name'] ?? 'General', ENT_QUOTES, 'UTF-8') ?>
-                                                    · <?= !empty($c['prof_first'])
+                                                    <?= !empty($c['prof_first'])
                                                         ? htmlspecialchars($c['prof_first'] . ' ' . $c['prof_last'], ENT_QUOTES, 'UTF-8')
                                                         : 'Unassigned' ?>
                                                 </td>
@@ -489,9 +517,21 @@ require_once '../../includes/header.php';
                                 <?= htmlspecialchars($academicPeriod['semester_label'], ENT_QUOTES, 'UTF-8') ?>
                             </p>
                         </div>
-                        <div class="search-box">
-                            <input type="search" placeholder="Search students or programs..."
-                                data-table-search="placementsTable">
+                        <div class="registrar-placement-toolbar-controls">
+                            <div class="search-box">
+                                <input type="search" placeholder="Search students or programs..."
+                                    data-table-search="placementsTable">
+                            </div>
+                            <label class="registrar-placement-year-filter" for="registrarPlacementYearFilter">
+                                <span>Year level</span>
+                                <select class="form-control" id="registrarPlacementYearFilter"
+                                    data-table-year-filter="placementsTable">
+                                    <option value="">All years</option>
+                                    <?php foreach ([1, 2, 3, 4] as $filterYearLevel): ?>
+                                        <option value="<?= $filterYearLevel ?>">Year <?= $filterYearLevel ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
                         </div>
                     </div>
                     <?php if ($academicReadOnly): ?>
@@ -526,9 +566,14 @@ require_once '../../includes/header.php';
                                 <thead>
                                     <tr>
                                         <?php if ($placementIsEditable): ?>
-                                            <th scope="col">Select</th><?php endif; ?>
+                                            <th scope="col">
+                                                <input type="checkbox" data-placement-select-all
+                                                    aria-label="Select all visible eligible students"
+                                                    title="Select all visible eligible students">
+                                            </th>
+                                        <?php endif; ?>
                                         <th scope="col">Student</th>
-                                        <th scope="col" class="registrar-placement-program">Program / department</th>
+                                        <th scope="col" class="registrar-placement-program">Program / Department</th>
                                         <th scope="col">Year level</th>
                                         <th scope="col">Progression</th>
                                         <th scope="col">GWA / Status</th>
@@ -548,22 +593,38 @@ require_once '../../includes/header.php';
                                             $placementProgression = (string) ($student['placement_progression_status'] ?? '');
                                             $studentPlacementField = 'placements[' . (int) $student['id'] . ']';
                                             $previousPlacement = $previousPlacementsByStudent[(int) $student['id']] ?? null;
+                                            $studentGradePeriod = $placementGradePeriodByStudent[(int) $student['id']] ?? $academicPeriod;
+                                            $studentGradeSemesterLabel = $studentGradePeriod['semester'] === 'first'
+                                                ? '1st Semester'
+                                                : '2nd Semester';
                                             $studentCourseGrades = $placementCourseGradesByStudent[(int) $student['id']] ?? [];
-                                            $releasedCourseGrades = array_values(array_filter(
-                                                $studentCourseGrades,
-                                                static fn(array $courseGrade): bool => $courseGrade['grade_released_at'] !== null
-                                                    && $courseGrade['final_grade'] !== null
-                                                    && $courseGrade['grade_status'] !== 'Drop'
-                                            ));
-                                            $gradePointSum = array_sum(array_map(
-                                                static fn(array $courseGrade): float => (float) $courseGrade['final_grade'],
-                                                $releasedCourseGrades
-                                            ));
-                                            $gradedCourseCount = count($releasedCourseGrades);
-                                            $averageGradePoints = $gradedCourseCount > 0
-                                                ? $gradePointSum / $gradedCourseCount
-                                                : null;
-                                            $studentGwa = $averageGradePoints;
+                                            $studentAllCourseGrades = $academicYearCourseGradesByStudent[(int) $student['id']] ?? [];
+                                            $studentCourseGradesByYear = [];
+                                            $studentGradeSummariesByYear = [];
+                                            foreach ($studentAllCourseGrades as $courseGrade) {
+                                                $gradeYear = $courseGrade['academic_year'];
+                                                $studentCourseGradesByYear[$gradeYear][$courseGrade['semester']][] = $courseGrade;
+                                                $studentGradeSummariesByYear[$gradeYear] ??= [
+                                                    'grade_point_sum' => 0.0,
+                                                    'graded_course_count' => 0,
+                                                    'pending_grade_count' => 0,
+                                                ];
+                                                if ($courseGrade['grade_status'] === 'Drop') {
+                                                    continue;
+                                                }
+                                                if ($courseGrade['grade_released_at'] !== null && $courseGrade['final_grade'] !== null) {
+                                                    $studentGradeSummariesByYear[$gradeYear]['grade_point_sum'] += (float) $courseGrade['final_grade'];
+                                                    $studentGradeSummariesByYear[$gradeYear]['graded_course_count']++;
+                                                } else {
+                                                    $studentGradeSummariesByYear[$gradeYear]['pending_grade_count']++;
+                                                }
+                                            }
+                                            foreach ($studentGradeSummariesByYear as &$yearSummary) {
+                                                $yearSummary['average_grade_points'] = $yearSummary['graded_course_count'] > 0
+                                                    ? $yearSummary['grade_point_sum'] / $yearSummary['graded_course_count']
+                                                    : null;
+                                            }
+                                            unset($yearSummary);
                                             $requiredCourseGrades = array_values(array_filter(
                                                 $studentCourseGrades,
                                                 static fn(array $courseGrade): bool => $courseGrade['grade_status'] !== 'Drop'
@@ -593,8 +654,8 @@ require_once '../../includes/header.php';
                                                 if ($previousPlacement === null) {
                                                     if (
                                                         isValidStudentProgression(
-                                                            'new',
-                                                            1,
+                                                            $placementProgression === 'initial' ? 'initial' : 'new',
+                                                            $placementProgression === 'initial' ? $currentYearLevel : 1,
                                                             null,
                                                             null,
                                                             null,
@@ -603,7 +664,11 @@ require_once '../../includes/header.php';
                                                             $academicPeriod['semester']
                                                         )
                                                     ) {
-                                                        $placementChoices['new'] = 1;
+                                                        if ($placementProgression === 'initial') {
+                                                            $placementChoices['initial'] = $currentYearLevel;
+                                                        } else {
+                                                            $placementChoices['new'] = 1;
+                                                        }
                                                     }
                                                 } else {
                                                     if (
@@ -650,14 +715,9 @@ require_once '../../includes/header.php';
                                             $placementUnavailableLabel = !$studentGradesReady
                                                 ? 'Awaiting released grades'
                                                 : 'No valid placement available';
-                                            $pendingGradeCount = count(array_filter(
-                                                $studentCourseGrades,
-                                                static fn(array $courseGrade): bool => $courseGrade['grade_status'] !== 'Drop'
-                                                    && ($courseGrade['grade_released_at'] === null || $courseGrade['final_grade'] === null)
-                                            ));
                                             $gradeModalId = 'placementGradeModal-' . (int) $student['id'];
                                             ?>
-                                            <tr>
+                                            <tr data-placement-year-level="<?= htmlspecialchars($placementYear, ENT_QUOTES, 'UTF-8') ?>">
                                                 <?php if ($placementIsEditable): ?>
                                                     <td><input type="checkbox" name="<?= $studentPlacementField ?>[selected]" value="1"
                                                             <?= !$studentGradesReady || $placementChoices === [] ? 'disabled' : '' ?>
@@ -681,12 +741,15 @@ require_once '../../includes/header.php';
                                                             <?= $placementChoices === [] ? 'disabled' : '' ?>
                                                             data-placement-choices="<?= htmlspecialchars(json_encode($placementChoices), ENT_QUOTES, 'UTF-8') ?>">
                                                             <?php if ($placementChoices === []): ?>
-                                                                <option value="" selected disabled><?= htmlspecialchars($placementUnavailableLabel, ENT_QUOTES, 'UTF-8') ?></option>
+                                                                <option value="" selected disabled>
+                                                                    <?= htmlspecialchars($placementUnavailableLabel, ENT_QUOTES, 'UTF-8') ?>
+                                                                </option>
                                                             <?php endif; ?>
                                                             <?php for ($yearLevel = 1; $yearLevel <= $yearLevelLimit; $yearLevel++): ?>
                                                                 <option value="<?= $yearLevel ?>" <?= !in_array($yearLevel, array_values($placementChoices), true) ? 'disabled' : '' ?>
                                                                     <?= $selectedPlacementYear === $yearLevel ? 'selected' : '' ?>>Year
-                                                                    <?= $yearLevel ?></option>
+                                                                    <?= $yearLevel ?>
+                                                                </option>
                                                             <?php endfor; ?>
                                                         </select>
                                                     </td>
@@ -697,12 +760,15 @@ require_once '../../includes/header.php';
                                                             <?= $placementChoices === [] ? 'disabled' : '' ?>
                                                             data-placement-choices="<?= htmlspecialchars(json_encode($placementChoices), ENT_QUOTES, 'UTF-8') ?>">
                                                             <?php if ($placementChoices === []): ?>
-                                                                <option value="" selected disabled><?= htmlspecialchars($placementUnavailableLabel, ENT_QUOTES, 'UTF-8') ?></option>
+                                                                <option value="" selected disabled>
+                                                                    <?= htmlspecialchars($placementUnavailableLabel, ENT_QUOTES, 'UTF-8') ?>
+                                                                </option>
                                                             <?php endif; ?>
-                                                            <?php foreach (['new' => 'New', 'continued' => 'Continued (same year)', 'promoted' => 'Promoted to next year', 'retake' => 'Retake'] as $statusValue => $statusLabel): ?>
+                                                            <?php foreach (['initial' => 'Initial transfer placement', 'new' => 'New', 'continued' => 'Continued (same year)', 'promoted' => 'Promoted to next year', 'retake' => 'Retake'] as $statusValue => $statusLabel): ?>
                                                                 <option value="<?= $statusValue ?>" <?= !array_key_exists($statusValue, $placementChoices) ? 'disabled' : '' ?>
                                                                     <?= $selectedPlacementStatus === $statusValue ? 'selected' : '' ?>>
-                                                                    <?= $statusLabel ?></option>
+                                                                    <?= $statusLabel ?>
+                                                                </option>
                                                             <?php endforeach; ?>
                                                         </select>
                                                         <?php if (!$studentGradesReady): ?>
@@ -734,23 +800,34 @@ require_once '../../includes/header.php';
                                                                     aria-label="Close grade details">&times;</button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <div class="registrar-grade-summary">
-                                                                    <p><strong>Average grade
-                                                                            points</strong><span><?= $averageGradePoints === null ? '—' : number_format($averageGradePoints, 2) ?></span>
+                                                                <p class="registrar-grade-period-note">
+                                                                    Placement readiness uses
+                                                                    <?= htmlspecialchars($studentGradeSemesterLabel, ENT_QUOTES, 'UTF-8') ?>;
+                                                                    each yearly summary includes both semesters.
+                                                                </p>
+                                                                <?php foreach ($studentGradeSummariesByYear as $academicYear => $yearSummary): ?>
+                                                                    <section class="registrar-grade-year-summary">
+                                                                        <h3><?= htmlspecialchars($academicYear, ENT_QUOTES, 'UTF-8') ?>
+                                                                        </h3>
+                                                                        <div class="registrar-grade-summary">
+                                                                            <p><strong>Average grade
+                                                                                    points</strong><span><?= $yearSummary['average_grade_points'] === null ? '—' : number_format($yearSummary['average_grade_points'], 2) ?></span>
+                                                                            </p>
+                                                                            <p><strong>Courses
+                                                                                    counted</strong><span><?= $yearSummary['graded_course_count'] ?></span>
+                                                                            </p>
+                                                                            <p><strong>Academic-year
+                                                                                    GWA</strong><span><?= $yearSummary['average_grade_points'] === null ? '—' : number_format($yearSummary['average_grade_points'], 2) ?></span>
+                                                                            </p>
+                                                                            <p><strong>Pending
+                                                                                    grades</strong><span><?= $yearSummary['pending_grade_count'] ?></span>
+                                                                            </p>
+                                                                        </div>
+                                                                    </section>
+                                                                <?php endforeach; ?>
+                                                                <?php if (!$studentAllCourseGrades): ?>
+                                                                    <p class="text-muted">No approved course enrollments are available.
                                                                     </p>
-                                                                    <p><strong>Courses
-                                                                            counted</strong><span><?= $gradedCourseCount ?></span>
-                                                                    </p>
-                                                                    <p><strong>Semester
-                                                                            GWA</strong><span><?= $studentGwa === null ? '—' : number_format($studentGwa, 2) ?></span>
-                                                                    </p>
-                                                                    <p><strong>Pending
-                                                                            grades</strong><span><?= $pendingGradeCount ?></span>
-                                                                    </p>
-                                                                </div>
-                                                                <?php if (!$studentCourseGrades): ?>
-                                                                    <p class="text-muted">No approved course enrollments for this
-                                                                        academic period.</p>
                                                                 <?php else: ?>
                                                                     <div class="table-responsive">
                                                                         <table class="data-table registrar-placement-grade-table">
@@ -767,25 +844,40 @@ require_once '../../includes/header.php';
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody>
-                                                                                <?php foreach ($studentCourseGrades as $courseGrade): ?>
-                                                                                    <?php
-                                                                                    $courseGradeReleased = $courseGrade['grade_released_at'] !== null
-                                                                                        && $courseGrade['final_grade'] !== null;
-                                                                                    $courseGradeStatus = $courseGrade['grade_status']
-                                                                                        ?? ($courseGradeReleased ? 'Released' : 'Pending Grades');
-                                                                                    ?>
-                                                                                    <tr>
-                                                                                        <td>
-                                                                                            <strong><?= htmlspecialchars($courseGrade['course_code'], ENT_QUOTES, 'UTF-8') ?></strong>
-                                                                                            <div class="text-muted">
-                                                                                                <?= htmlspecialchars($courseGrade['course_name'], ENT_QUOTES, 'UTF-8') ?>
-                                                                                            </div>
-                                                                                        </td>
-                                                                                        <td><?= $courseGradeReleased ? number_format((float) $courseGrade['final_grade'], 2) : '—' ?>
-                                                                                        </td>
-                                                                                        <td><?= htmlspecialchars($courseGradeStatus, ENT_QUOTES, 'UTF-8') ?>
-                                                                                        </td>
+                                                                                <?php foreach ($studentCourseGradesByYear as $academicYear => $semesterGrades): ?>
+                                                                                    <tr class="registrar-grade-year-row">
+                                                                                        <th scope="colgroup" colspan="3">
+                                                                                            <?= htmlspecialchars($academicYear, ENT_QUOTES, 'UTF-8') ?>
+                                                                                        </th>
                                                                                     </tr>
+                                                                                    <?php foreach (['first' => '1st Semester', 'second' => '2nd Semester'] as $semesterValue => $semesterTitle): ?>
+                                                                                        <?php if (!empty($semesterGrades[$semesterValue])): ?>
+                                                                                            <tr class="registrar-grade-semester-row">
+                                                                                                <th scope="colgroup" colspan="3">
+                                                                                                    <?= $semesterTitle ?></th>
+                                                                                            </tr>
+                                                                                            <?php foreach ($semesterGrades[$semesterValue] as $courseGrade): ?>
+                                                                                                <?php
+                                                                                                $courseGradeReleased = $courseGrade['grade_released_at'] !== null
+                                                                                                    && $courseGrade['final_grade'] !== null;
+                                                                                                $courseGradeStatus = $courseGrade['grade_status']
+                                                                                                    ?? ($courseGradeReleased ? 'Released' : 'Pending Grades');
+                                                                                                ?>
+                                                                                                <tr>
+                                                                                                    <td>
+                                                                                                        <strong><?= htmlspecialchars($courseGrade['course_code'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                                                                                        <div class="text-muted">
+                                                                                                            <?= htmlspecialchars($courseGrade['course_name'], ENT_QUOTES, 'UTF-8') ?>
+                                                                                                        </div>
+                                                                                                    </td>
+                                                                                                    <td><?= $courseGradeReleased ? number_format((float) $courseGrade['final_grade'], 2) : '—' ?>
+                                                                                                    </td>
+                                                                                                    <td><?= htmlspecialchars($courseGradeStatus, ENT_QUOTES, 'UTF-8') ?>
+                                                                                                    </td>
+                                                                                                </tr>
+                                                                                            <?php endforeach; ?>
+                                                                                        <?php endif; ?>
+                                                                                    <?php endforeach; ?>
                                                                                 <?php endforeach; ?>
                                                                             </tbody>
                                                                         </table>
@@ -815,9 +907,9 @@ require_once '../../includes/header.php';
                                 <p id="registrarPlacementConfirmDescription">
                                     This will update the selected students for the current academic period.
                                 </p>
-                                <div class="registrar-placement-confirm-actions">
-                                    <button type="button" class="btn btn-outline" data-close-placement-confirm>No</button>
-                                    <button type="submit" class="btn btn-primary" form="registrarPlacementForm">Yes,
+                                <div class="professor-assessment-confirm-actions">
+                                    <button type="button" value="no" data-close-placement-confirm>No</button>
+                                    <button type="submit" value="yes" form="registrarPlacementForm">Yes,
                                         save</button>
                                 </div>
                             </div>
@@ -952,9 +1044,8 @@ require_once '../../includes/header.php';
                             <table class="data-table registrar-announcement-table" data-no-sort>
                                 <thead>
                                     <tr>
-                                        <th class="registrar-announcement-select-heading">
-                                            <span class="sr-only">Select</span>
-                                        </th>
+                                        <th scope="col" aria-label="Announcement selection"
+                                            class="registrar-announcement-select-heading"></th>
                                         <th scope="col">Headline</th>
                                         <th scope="col">Role</th>
                                         <th scope="col">Homepage Notice</th>
@@ -1031,7 +1122,7 @@ require_once '../../includes/header.php';
                                                 </td>
                                                 <td style="font-size:0.8rem;">
                                                     <?php $announcementDate = $a['updated_at'] ?? $a['created_at']; ?>
-                                                    <?= !empty($a['updated_at']) ? 'Updated ' : '' ?><?= htmlspecialchars(date('M d, Y h:i A', strtotime($announcementDate)), ENT_QUOTES, 'UTF-8') ?>
+                                                    <?= !empty($a['updated_at']) ? 'Updated ' : '' ?>            <?= htmlspecialchars(date('M d, Y h:i A', strtotime($announcementDate)), ENT_QUOTES, 'UTF-8') ?>
                                                 </td>
                                                 <td>
                                                     <?php if (
@@ -1050,8 +1141,7 @@ require_once '../../includes/header.php';
                                                 </td>
                                                 <td>
                                                     <button type="button" class="btn btn-outline btn-sm"
-                                                        data-open-modal="addAnnouncementModal"
-                                                        data-edit-announcement
+                                                        data-open-modal="addAnnouncementModal" data-edit-announcement
                                                         data-announcement-id="<?= (int) $a['id'] ?>"
                                                         data-announcement-headline="<?= htmlspecialchars($a['headline'], ENT_QUOTES, 'UTF-8') ?>"
                                                         data-announcement-message="<?= htmlspecialchars($a['message'], ENT_QUOTES, 'UTF-8') ?>"
@@ -1286,24 +1376,30 @@ require_once '../../includes/header.php';
                                         <label for="user_fn">First Name <span class="required-marker"
                                                 aria-hidden="true">*</span></label>
                                         <input type="text" id="user_fn" name="first_name" class="form-control"
-                                            placeholder="e.g. Juan" maxlength="50" autocomplete="given-name" required>
+                                            placeholder="e.g. Juan" maxlength="50" autocomplete="given-name"
+                                            pattern="[\p{L}\p{M} ]*" title="Use letters and spaces only."
+                                            data-name-input required>
                                     </div>
                                     <div class="form-group">
                                         <label for="user_mn">Middle Name</label>
                                         <input type="text" id="user_mn" name="middle_name" class="form-control"
-                                            placeholder="e.g. Maria" maxlength="50" autocomplete="additional-name">
+                                            placeholder="e.g. Maria" maxlength="50" autocomplete="additional-name"
+                                            pattern="[\p{L}\p{M} ]*" title="Use letters and spaces only." data-name-input>
                                     </div>
                                     <div class="form-group">
                                         <label for="user_ln">Surname <span class="required-marker"
                                                 aria-hidden="true">*</span></label>
                                         <input type="text" id="user_ln" name="last_name" class="form-control"
                                             placeholder="e.g. Dela Cruz" maxlength="50" autocomplete="family-name"
-                                            required>
+                                            pattern="[\p{L}\p{M} ]*" title="Use letters and spaces only."
+                                            data-name-input required>
                                     </div>
                                     <div class="form-group">
                                         <label for="user_suffix">Suffix</label>
                                         <input type="text" id="user_suffix" name="suffix" class="form-control"
-                                            placeholder="e.g. Jr." maxlength="20">
+                                            placeholder="e.g. Jr" maxlength="20"
+                                            pattern="[\p{L}\p{M} ]*" title="Use letters and spaces only."
+                                            data-name-input>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -1350,7 +1446,8 @@ require_once '../../includes/header.php';
                                                 label="<?= htmlspecialchars($department['name'], ENT_QUOTES, 'UTF-8') ?>">
                                                 <?php foreach ($activePrograms as $program): ?>
                                                     <?php if ((int) $program['department_id'] === (int) $department['id']): ?>
-                                                        <option value="<?= (int) $program['id'] ?>">
+                                                        <option value="<?= (int) $program['id'] ?>"
+                                                            data-year-limit="<?= studentProgramYearLimit((string) $program['code']) ?>">
                                                             <?= htmlspecialchars(
                                                                 $program['name'] . (in_array($program['code'], ['GPMC', 'ADFSWD'], true) ? '' : ' (' . $program['code'] . ')'),
                                                                 ENT_QUOTES,
@@ -1362,6 +1459,20 @@ require_once '../../includes/header.php';
                                             </optgroup>
                                         <?php endforeach; ?>
                                     </select>
+                                </div>
+                                <div class="form-group" id="userYearLevelGroup" hidden>
+                                    <label for="user_year_level">Year Level <span class="required-marker"
+                                            aria-hidden="true">*</span></label>
+                                    <select id="user_year_level" name="year_level" class="form-control"
+                                        data-user-year-level disabled>
+                                        <?php foreach ([1, 2, 3, 4] as $yearLevel): ?>
+                                            <option value="<?= $yearLevel ?>" <?= $yearLevel === 1 ? 'selected' : '' ?>>
+                                                <?= $yearLevel ?><?= $yearLevel === 1 ? 'st' : ($yearLevel === 2 ? 'nd' : ($yearLevel === 3 ? 'rd' : 'th')) ?> Year
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="text-muted">Students starting above Year 1 are recorded at that transfer
+                                        level. Later year changes require promotion in Student Placement.</small>
                                 </div>
                                 <div class="form-group">
                                     <label for="user_email">APEX Email <span class="required-marker"
@@ -1432,8 +1543,8 @@ require_once '../../includes/header.php';
 
         <div class="modal-backdrop" id="addAnnouncementModal">
             <div class="modal-dialog">
-                <form action="../../api/registrar_announcements_process.php" method="POST" enctype="multipart/form-data"
-                    data-registrar-announcement-form>
+                <form class="registrar-announcement-form" action="../../api/registrar_announcements_process.php"
+                    method="POST" enctype="multipart/form-data" data-registrar-announcement-form>
                     <input type="hidden" name="csrf_token"
                         value="<?= htmlspecialchars($registrarAnnouncementCsrfToken, ENT_QUOTES, 'UTF-8') ?>">
                     <input type="hidden" name="action" value="publish">
@@ -1488,9 +1599,9 @@ require_once '../../includes/header.php';
                                     <label class="registrar-homepage-notice-toggle">
                                         <input type="checkbox" name="is_homepage_notice" value="1" data-homepage-notice
                                             aria-label="Make this notice public on the homepage">
+                                        <span class="registrar-homepage-state-label" data-homepage-notice-off>Off</span>
                                         <span class="registrar-homepage-switch" aria-hidden="true"><span></span></span>
-                                        <span class="registrar-homepage-switch-label"
-                                            data-homepage-notice-label>Off</span>
+                                        <span class="registrar-homepage-state-label" data-homepage-notice-on>On</span>
                                     </label>
                                 </div>
                                 <p class="registrar-homepage-notice-description">
@@ -1504,17 +1615,17 @@ require_once '../../includes/header.php';
                                     </ul>
                                 </div>
                             </div>
-                            <div class="registrar-homepage-category-options" data-homepage-category-fields hidden
-                                role="radiogroup" aria-label="Homepage notice category">
-                                <span class="form-label">Choose one category *</span>
-                                <label><input type="radio" name="homepage_category" value="academic" disabled>
-                                    <span>Academic</span></label>
-                                <label><input type="radio" name="homepage_category" value="system" disabled>
-                                    <span>System Update</span></label>
-                                <label><input type="radio" name="homepage_category" value="event" disabled>
-                                    <span>Campus Event</span></label>
-                                <label><input type="radio" name="homepage_category" value="policy" disabled>
-                                    <span>Policy Notice</span></label>
+                            <div class="registrar-homepage-category-select">
+                                <label for="homepageNoticeCategory">Homepage category *</label>
+                                <select id="homepageNoticeCategory" name="homepage_category" class="form-control"
+                                    data-homepage-category>
+                                    <option value="">Select a category</option>
+                                    <option value="academic">Academic</option>
+                                    <option value="system">System Update</option>
+                                    <option value="event">Campus Event</option>
+                                    <option value="policy">Policy Notice</option>
+                                </select>
+                                <small>Choose a category when publishing this notice publicly.</small>
                             </div>
                         </fieldset>
                         <div class="form-group">
@@ -1524,14 +1635,28 @@ require_once '../../includes/header.php';
                         </div>
                         <div class="form-group">
                             <label for="ann_image">Image (optional)</label>
-                            <input type="file" id="ann_image" name="image" class="form-control"
-                                accept="image/jpeg,image/png,image/webp">
-                            <small data-announcement-image-note>JPG, PNG, or WebP up to 5 MB. Without an image, the notice is text only.</small>
+                            <label class="lesson-upload-box registrar-announcement-upload-box" for="ann_image">
+                                <span class="lesson-upload-main">
+                                    <span class="lesson-upload-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
+                                        </svg>
+                                    </span>
+                                    <strong class="lesson-upload-title" data-announcement-upload-title>Choose an
+                                        image</strong>
+                                </span>
+                                <small class="lesson-upload-types" data-announcement-image-note>
+                                    JPG, PNG, or WebP up to 5 MB. Without an image, the notice is text only.
+                                </small>
+                                <input type="file" id="ann_image" name="image" accept="image/jpeg,image/png,image/webp"
+                                    data-announcement-image-input>
+                            </label>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
-                        <button type="submit" class="btn btn-coral" data-announcement-submit>Publish Announcement</button>
+                        <button type="submit" class="btn btn-coral" data-announcement-submit>Publish
+                            Announcement</button>
                     </div>
                 </form>
             </div>

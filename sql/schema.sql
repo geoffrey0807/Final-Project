@@ -58,7 +58,6 @@ CREATE TABLE IF NOT EXISTS users (
     middle_name VARCHAR(50) DEFAULT NULL,
     suffix VARCHAR(20) DEFAULT NULL,
     id_number VARCHAR(30) DEFAULT NULL,
-    program VARCHAR(150) DEFAULT NULL,
     program_id INT DEFAULT NULL,
     department_id INT DEFAULT NULL,
     year_level TINYINT UNSIGNED DEFAULT NULL,
@@ -143,12 +142,11 @@ CREATE TABLE IF NOT EXISTS student_academic_placements (
     semester ENUM('first', 'second') NOT NULL,
     program_id INT NOT NULL,
     year_level TINYINT UNSIGNED NOT NULL,
-    cohort_section VARCHAR(20) DEFAULT NULL,
-    progression_status ENUM('initial', 'new', 'continued', 'promoted', 'retake') NOT NULL,
+    progression_status ENUM('initial', 'new', 'continued', 'promoted', 'relegated', 'retake') NOT NULL,
     assigned_by INT DEFAULT NULL,
     assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (student_id, academic_year, semester),
-    INDEX idx_student_placements_period (academic_year, semester, program_id, year_level, cohort_section),
+    INDEX idx_student_placements_period (academic_year, semester, program_id, year_level),
     CONSTRAINT fk_student_placements_student FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_student_placements_program FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE RESTRICT,
     CONSTRAINT fk_student_placements_assigned_by FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL,
@@ -295,16 +293,6 @@ CREATE TABLE IF NOT EXISTS registrar_announcement_acknowledgements (
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS student_announcement_reads (
-    announcement_id INT NOT NULL,
-    student_id INT NOT NULL,
-    read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (announcement_id, student_id),
-    INDEX idx_student_announcement_reads_student (student_id),
-    FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 CREATE TABLE IF NOT EXISTS user_announcement_reads (
     announcement_id INT NOT NULL,
     user_id INT NOT NULL,
@@ -399,6 +387,7 @@ CREATE TABLE IF NOT EXISTS assessments (
     total_points DECIMAL(8,2) NOT NULL,
     deadline DATETIME NOT NULL,
     time_limit_minutes SMALLINT UNSIGNED DEFAULT NULL,
+    is_draft TINYINT(1) NOT NULL DEFAULT 0,
     academic_year CHAR(9) NOT NULL,
     semester ENUM('first', 'second') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -412,6 +401,7 @@ CREATE TABLE IF NOT EXISTS assessment_questions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     assessment_id INT NOT NULL,
     question_text TEXT NOT NULL,
+    image_path VARCHAR(255) DEFAULT NULL,
     question_type ENUM('multiple_choice', 'true_false') NOT NULL,
     choices_json JSON DEFAULT NULL,
     correct_answer VARCHAR(1000) DEFAULT NULL,
